@@ -8,18 +8,27 @@ i_rst,
 i_id_op1,
 i_id_op2,
 i_id_exec_type,
+i_id_ram_mask,
+i_id_sign,
 
 i_id_rd,
+i_id_pc,
 
 o_mem_rd_en,
 o_mem_rd,
-o_mem_rd_reg
+o_mem_rd_reg,
+o_mem_ram_wr_en,
+o_mem_ram_rd_en,
+o_mem_ram_addr,
+o_mem_ram_data,
+o_mem_ram_mask,
+o_mem_sign,
 );
 
 /* parameter */
 
-parameter INSTR_WIDTH = 32;
 parameter XLEN = 32;
+parameter ADDR_WIDTH = 8;
 
 /* port */
 
@@ -29,12 +38,22 @@ input wire i_rst;
 input wire [XLEN-1:0] i_id_op1;
 input wire [XLEN-1:0] i_id_op2;
 input wire [3:0] i_id_exec_type;
+input wire [3:0] i_id_ram_mask;
+input wire i_id_sign;
 
 input wire [4:0] i_id_rd;
+input wire [XLEN-1:0] i_id_pc;
 
 output wire o_mem_rd_en;
 output wire [4:0] o_mem_rd;
 output wire [XLEN-1:0] o_mem_rd_reg;
+
+output wire o_mem_ram_wr_en;
+output wire o_mem_ram_rd_en;
+output wire [XLEN-1:0] o_mem_ram_addr;
+output wire [XLEN-1:0] o_mem_ram_data;
+output wire [3:0] o_mem_ram_mask;
+output wire o_mem_sign;
 
 /* define */
 
@@ -48,6 +67,9 @@ output wire [XLEN-1:0] o_mem_rd_reg;
 `define OP_SLL          4'b1000
 `define OP_SRL          4'b1001
 `define OP_SRA          4'b1010
+`define OP_JMP          4'b1011
+`define OP_LOAD         4'b1100
+`define OP_STORE        4'b1101
 
 /* local */
 
@@ -55,11 +77,29 @@ reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 
+wire [XLEN-1:0] ram_full_mask;
+
+reg mem_ram_wr_en;
+reg mem_ram_rd_en;
+reg [XLEN-1:0] mem_ram_addr;
+reg [XLEN-1:0] mem_ram_data;
+reg [3:0] mem_ram_mask;
+reg mem_sign;
+
 /* logic */
 
 assign o_mem_rd_en = rd_en;
 assign o_mem_rd = rd;
 assign o_mem_rd_reg = rd_reg;
+
+assign ram_full_mask = {{8{i_id_ram_mask[3]}}, {8{i_id_ram_mask[2]}}, {8{i_id_ram_mask[1]}}, {8{i_id_ram_mask[0]}}};
+
+assign o_mem_ram_wr_en = mem_ram_wr_en;
+assign o_mem_ram_rd_en = mem_ram_rd_en;
+assign o_mem_ram_addr = mem_ram_addr;
+assign o_mem_ram_data = mem_ram_data;
+assign o_mem_ram_mask = mem_ram_mask;
+assign o_mem_sign = mem_sign;
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
@@ -109,9 +149,32 @@ always @ (posedge i_clk or posedge i_rst) begin
                    rd_reg <= i_id_op1 >>> i_id_op2;
                    rd_en <= 1'b1;
                    end
+        `OP_JMP  : begin
+                   rd_reg <= i_id_pc + 4;
+                   rd_en <= 1'b1;
+                   end
+        `OP_LOAD : begin
+                   mem_ram_rd_en <= 1'b1;
+                   mem_ram_wr_en <= 1'b0;
+                   rd_en <= 1'b1;
+                   mem_ram_addr <= i_id_op2[XLEN-1:2];
+                   mem_ram_mask <= i_id_ram_mask << i_id_op2[1:0];
+                   mem_sign <= i_id_sign;
+                   end
+        `OP_STORE: begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b1;
+                   rd_en <= 1'b0;
+                   mem_ram_addr <= i_id_op2[XLEN-1:2];
+                   mem_ram_data <= (i_id_op1 & ram_full_mask) << (i_id_op2[1:0] << 3);
+                   mem_ram_mask <= i_id_ram_mask << i_id_op2[1:0];
+                   mem_sign <= i_id_sign;
+                   end
         default  : begin
                    rd_reg <= {XLEN{1'b0}};
                    rd_en <= 1'b0;
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    end
         endcase
 

@@ -59,7 +59,7 @@ begin
 end
 
 always @ (posedge i_clk) begin
-    if (i_w_en) begin
+    if (i_w_en && i_w) begin
             regs[i_w] <= i_w_reg;
     end
 end

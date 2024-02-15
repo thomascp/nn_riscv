@@ -16,7 +16,6 @@ o_reg_w_reg
 
 /* parameter */
 
-parameter INSTR_WIDTH = 32;
 parameter XLEN = 32;
 
 /* port */
