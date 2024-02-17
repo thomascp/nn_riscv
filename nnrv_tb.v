@@ -7,12 +7,12 @@ reg rst;
 initial begin
   clk = 0;
   rst = 1;
-  #500 rst = 0;
-  #2000 $finish;
+  #10 rst = 0;
+  #300 $finish;
 end
 
 always begin
- #100 clk = !clk;
+ #5 clk = !clk;
 end
 
 integer reg_idx = 0;

@@ -9,11 +9,13 @@ i_if_instr,
 i_if_pc,
 o_if_jmp_stall,
 o_if_jmp_pc,
+o_if_hazard_stall,
 
 o_exec_pc,
 o_exec_op1,
 o_exec_op2,
 o_exec_type,
+o_exec_rd_en,
 o_exec_rd,
 o_exec_ram_mask,
 o_exec_sign,
@@ -24,7 +26,17 @@ i_reg_r1_reg,
 
 o_reg_r2_en,
 o_reg_r2,
-i_reg_r2_reg
+i_reg_r2_reg,
+
+i_exec_rd_en,
+i_exec_rd_ready,
+i_exec_rd,
+i_exec_rd_reg,
+
+i_mem_rd_en,
+i_mem_rd_ready,
+i_mem_rd,
+i_mem_rd_reg
 );
 
 /* parameter */
@@ -41,11 +53,13 @@ input wire [INSTR_WIDTH-1:0] i_if_instr;
 input wire [XLEN-1:0] i_if_pc;
 output wire o_if_jmp_stall;
 output wire [XLEN-1:0] o_if_jmp_pc;
+output wire o_if_hazard_stall;
 
 output wire [XLEN-1:0] o_exec_pc;
 output wire [XLEN-1:0] o_exec_op1;
 output wire [XLEN-1:0] o_exec_op2;
 output wire [3:0] o_exec_type;
+output wire o_exec_rd_en;
 output wire [4:0] o_exec_rd;
 output wire [3:0] o_exec_ram_mask;
 output wire o_exec_sign;
@@ -57,6 +71,16 @@ input wire [XLEN-1:0] i_reg_r1_reg;
 output wire o_reg_r2_en;
 output wire [4:0] o_reg_r2;
 input wire [XLEN-1:0] i_reg_r2_reg;
+
+input wire i_exec_rd_en;
+input wire i_exec_rd_ready;
+input wire [4:0] i_exec_rd;
+input wire [XLEN-1:0]i_exec_rd_reg;
+
+input wire i_mem_rd_en;
+input wire i_mem_rd_ready;
+input wire [4:0] i_mem_rd;
+input wire [XLEN-1:0]i_mem_rd_reg;
 
 /* define */
 
@@ -132,7 +156,7 @@ wire imm_30;
 wire imm_20;
 wire imm_7;
 wire imm_sign;
-wire shamt_5;
+wire [4:0] shamt_5;
 wire [XLEN-1:0] i_imm;
 wire [XLEN-1:0] s_imm;
 wire [XLEN-1:0] b_imm;
@@ -140,9 +164,22 @@ wire [XLEN-1:0] u_imm;
 wire [XLEN-1:0] j_imm;
 wire [INSTR_WIDTH-1:0] id_instr;
 
+wire rs1_valid;
+wire rs2_valid;
+
+wire id_hazard_stall;
+wire exec_hazard_stall;
+wire exec_rd_rs1_ready;
+wire exec_rd_rs2_ready;
+wire mem_hazard_stall;
+wire mem_rd_rs1_ready;
+wire mem_rd_rs2_ready;
+wire hazard_stall;
+
 reg [XLEN-1:0] exec_op1 = {XLEN{1'b0}};
 reg [XLEN-1:0] exec_op2 = {XLEN{1'b0}};
 reg [3:0] exec_type = 4'b0;
+reg exec_rd_en = 1'b0;
 reg [4:0] exec_rd = 5'b0;
 reg [XLEN-1:0] exec_pc = {XLEN{1'b0}};
 reg [3:0] exec_ram_mask = 4'b0000;
@@ -153,6 +190,9 @@ reg reg_r2_en = 1'b1;
 
 reg jmp_stall = 1'b0;
 reg [XLEN-1:0] jmp_pc = {XLEN{1'b0}};
+
+wire [XLEN-1:0] r1_reg;
+wire [XLEN-1:0] r2_reg;
 
 assign id_instr = (jmp_stall) ? `OP_INSTR_NOP : i_if_instr;
 
@@ -178,6 +218,10 @@ assign u_imm = {imm_sign, imm_30_20, imm_19_12, 12'b0};
 assign j_imm = {{12{imm_sign}}, imm_19_12, imm_20, imm_30_25, imm_24_21, 1'b0};
 assign shamt_5 = id_instr[24:20];
 
+assign rs1_valid = (opcode == `JALR) || (opcode == `BRANCH) || (opcode == `LOAD)
+                        || (opcode == `STORE) || (opcode == `OP) || (opcode == `OP_IMM);
+assign rs2_valid = (opcode == `BRANCH) || (opcode == `STORE) || (opcode == `OP);
+
 assign o_if_jmp_stall = jmp_stall;
 assign o_if_jmp_pc = jmp_pc;
 
@@ -189,11 +233,31 @@ assign o_reg_r2 = rs2_idx;
 assign o_exec_op1 = exec_op1;
 assign o_exec_op2 = exec_op2;
 assign o_exec_type = exec_type;
+assign o_exec_rd_en = exec_rd_en;
 assign o_exec_rd = exec_rd;
 assign o_exec_pc = exec_pc;
 assign o_exec_ram_mask = exec_ram_mask;
 
 assign o_exec_sign = exec_sign;
+
+assign id_hazard_stall = (exec_rd_en) && (exec_rd != 0) &&
+                (((rs1_valid) && (exec_rd == rs1_idx)) || ((rs2_valid) && (exec_rd == rs2_idx)));
+
+assign exec_hazard_stall = (i_exec_rd_en) && (!i_exec_rd_ready) && (i_exec_rd != 0) &&
+                (((rs1_valid) && (i_exec_rd == rs1_idx)) || ((rs2_valid) && (i_exec_rd == rs2_idx)));
+assign exec_rd_rs1_ready = (i_exec_rd_en) && (i_exec_rd_ready) && (i_exec_rd != 0) && (rs1_valid) && (i_exec_rd == rs1_idx);
+assign exec_rd_rs2_ready = (i_exec_rd_en) && (i_exec_rd_ready) && (i_exec_rd != 0) && (rs2_valid) && (i_exec_rd == rs2_idx);
+
+assign mem_hazard_stall = (i_mem_rd_en) && (!i_mem_rd_ready) && (i_mem_rd != 0) &&
+                (((rs1_valid) && (i_mem_rd == rs1_idx)) || ((rs2_valid) && (i_mem_rd == rs2_idx)));
+assign mem_rd_rs1_ready = (i_mem_rd_en) && (i_mem_rd_ready) && (i_mem_rd != 0) && (rs1_valid) && (i_mem_rd == rs1_idx);
+assign mem_rd_rs2_ready = (i_mem_rd_en) && (i_mem_rd_ready) && (i_mem_rd != 0) && (rs2_valid) && (i_mem_rd == rs2_idx);
+
+assign hazard_stall = id_hazard_stall || exec_hazard_stall || mem_hazard_stall;
+assign o_if_hazard_stall = hazard_stall;
+
+assign r1_reg = (exec_rd_rs1_ready) ? i_exec_rd_reg : (mem_rd_rs1_ready) ? i_mem_rd_reg : i_reg_r1_reg;
+assign r2_reg = (exec_rd_rs2_ready) ? i_exec_rd_reg : (mem_rd_rs2_ready) ? i_mem_rd_reg : i_reg_r2_reg;
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
@@ -202,35 +266,50 @@ always @ (posedge i_clk or posedge i_rst) begin
         exec_op2 <= {XLEN{1'b0}};
         exec_type <= `OP_NOP;
         jmp_stall <= 1'b0;
+        exec_rd_en <= 1'b0;
+    end else if (hazard_stall) begin
+        exec_rd <= 5'b0;
+        exec_op1 <= {XLEN{1'b0}};
+        exec_op2 <= {XLEN{1'b0}};
+        exec_type <= `OP_NOP;
+        jmp_stall <= 1'b0;
+        exec_rd_en <= 1'b0;
     end else begin
         exec_pc <= i_if_pc;
         exec_rd <= rd_idx;
         case(opcode)
         `OP_IMM :   begin
                     jmp_stall <= 1'b0;
-                    exec_op1 <= i_reg_r1_reg;
-                    exec_op2 <= i_imm;
+                    exec_op1 <= r1_reg;
+                    exec_rd_en <= 1'b1;
                     case(funct3)
                     `F3_ADD_SUB: begin
                                 exec_type <= `OP_ADD;
+                                exec_op2 <= i_imm;
                                 end
                     `F3_SLT:     begin
                                 exec_type <= `OP_SLT;
+                                exec_op2 <= i_imm;
                                 end
                     `F3_SLTU:    begin
                                 exec_type <= `OP_SLTU;
+                                exec_op2 <= i_imm;
                                 end
                     `F3_XOR:     begin
                                 exec_type <= `OP_XOR;
+                                exec_op2 <= i_imm;
                                 end
                     `F3_OR:      begin
                                 exec_type <= `OP_OR;
+                                exec_op2 <= i_imm;
                                 end
                     `F3_AND:     begin
                                 exec_type <= `OP_AND;
+                                exec_op2 <= i_imm;
                                 end
                     `F3_SLL:     begin
                                 exec_type <= `OP_SLL;
+                                exec_op2 <= shamt_5;
                                 end
                     `F3_SRL_SRA: begin
                                 case(imm_30)
@@ -241,25 +320,29 @@ always @ (posedge i_clk or posedge i_rst) begin
                                         exec_type <= `OP_SRA;
                                         end
                                 endcase
+                                exec_op2 <= shamt_5;
                                 end
                     endcase
                     end
         `LUI      : begin
                     jmp_stall <= 1'b0;
-                    exec_op1 <= i_reg_r1_reg;
+                    exec_op1 <= r1_reg;
                     exec_op2 <= u_imm;
                     exec_type <= `OP_ADD;
+                    exec_rd_en <= 1'b1;
                     end
         `AUIPC    : begin
                     jmp_stall <= 1'b0;
                     exec_op1 <= i_if_pc;
                     exec_op2 <= u_imm;
                     exec_type <= `OP_ADD;
+                    exec_rd_en <= 1'b1;
                     end
         `OP       : begin
                     jmp_stall <= 1'b0;
-                    exec_op1 <= i_reg_r1_reg;
-                    exec_op2 <= i_reg_r2_reg;
+                    exec_op1 <= r1_reg;
+                    exec_op2 <= r2_reg;
+                    exec_rd_en <= 1'b1;
                     case(funct3)
                     `F3_ADD_SUB: begin
                                 case(imm_30)
@@ -305,37 +388,40 @@ always @ (posedge i_clk or posedge i_rst) begin
                     jmp_stall <= 1'b1;
                     jmp_pc <= j_imm + i_if_pc;
                     exec_type <= `OP_JMP;
+                    exec_rd_en <= 1'b1;
                     end
         `JALR     : begin
                     jmp_stall <= 1'b1;
-                    jmp_pc <= j_imm + i_reg_r1_reg;
+                    jmp_pc <= j_imm + r1_reg;
                     exec_type <= `OP_JMP;
+                    exec_rd_en <= 1'b1;
                     end
         `BRANCH   : begin
                     exec_type <= `OP_NOP;
+                    exec_rd_en <= 1'b0;
                     case(funct3)
                     `F3_BEQ:    begin
-                                jmp_stall <= (i_reg_r1_reg == i_reg_r2_reg);
+                                jmp_stall <= (r1_reg == r2_reg);
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
                     `F3_BNE:    begin
-                                jmp_stall <= (i_reg_r1_reg != i_reg_r2_reg);
+                                jmp_stall <= (r1_reg != r2_reg);
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
                     `F3_BLT:    begin
-                                jmp_stall <= ($signed(i_reg_r1_reg) < $signed(i_reg_r2_reg));
+                                jmp_stall <= ($signed(r1_reg) < $signed(r2_reg));
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
                     `F3_BGE:    begin
-                                jmp_stall <= ($signed(i_reg_r1_reg) >= $signed(i_reg_r2_reg));
+                                jmp_stall <= ($signed(r1_reg) >= $signed(r2_reg));
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
                     `F3_BLTU:   begin
-                                jmp_stall <= (i_reg_r1_reg < i_reg_r2_reg);
+                                jmp_stall <= (r1_reg < r2_reg);
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
                     `F3_BGEU:   begin
-                                jmp_stall <= (i_reg_r1_reg >= i_reg_r2_reg);
+                                jmp_stall <= (r1_reg >= r2_reg);
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
                     endcase
@@ -344,7 +430,8 @@ always @ (posedge i_clk or posedge i_rst) begin
                     jmp_stall <= 1'b0;
                     exec_type <= `OP_LOAD;
                     exec_rd <= rd_idx;
-                    exec_op2 <= i_reg_r1_reg + i_imm;
+                    exec_rd_en <= 1'b1;
+                    exec_op2 <= r1_reg + i_imm;
                     case(funct3)
                     `F3_LB:     begin
                                 exec_ram_mask <= 4'b0001;
@@ -371,8 +458,9 @@ always @ (posedge i_clk or posedge i_rst) begin
         `STORE    : begin
                     jmp_stall <= 1'b0;
                     exec_type <= `OP_STORE;
-                    exec_op1 <= i_reg_r2_reg;
-                    exec_op2 <= i_reg_r1_reg + s_imm;
+                    exec_rd_en <= 1'b0;
+                    exec_op1 <= r2_reg;
+                    exec_op2 <= r1_reg + s_imm;
                     exec_sign <= 1'b0;
                     case(funct3)
                     `F3_SB:     begin
@@ -389,6 +477,7 @@ always @ (posedge i_clk or posedge i_rst) begin
         default  :  begin
                     jmp_stall <= 1'b0;
                     exec_type <= `OP_NOP;
+                    exec_rd_en <= 1'b0;
                     end
         endcase
     end

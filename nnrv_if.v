@@ -13,7 +13,8 @@ i_ram_rd_data,
 o_id_instr,
 o_id_cur_pc,
 i_id_jmp_stall,
-i_id_jmp_pc
+i_id_jmp_pc,
+i_id_hazard_stall
 );
 
 /* parameter */
@@ -36,6 +37,7 @@ output wire [INSTR_WIDTH-1:0] o_id_instr;
 output wire [XLEN-1:0] o_id_cur_pc;
 input wire i_id_jmp_stall;
 input wire [XLEN-1:0] i_id_jmp_pc;
+input wire i_id_hazard_stall;
 
 /* define */
 
@@ -46,7 +48,7 @@ reg [INSTR_WIDTH-1:0] instr = {INSTR_WIDTH{1'b0}};
 
 reg [XLEN-1:0] cur_pc = {XLEN{1'b0}};
 
-assign o_ram_rd_addr = (i_id_jmp_stall) ? i_id_jmp_pc : pc;
+assign o_ram_rd_addr = (i_id_jmp_stall) ? i_id_jmp_pc : (i_id_hazard_stall) ? cur_pc : pc;
 assign o_id_instr = instr;
 assign o_id_cur_pc = cur_pc;
 
@@ -60,6 +62,8 @@ always @ (posedge i_clk or posedge i_rst) begin
 		pc <= {ADDR_WIDTH{1'b0}};
 	end else if (i_id_jmp_stall) begin
 		pc <= i_id_jmp_pc;
+	end else if (i_id_hazard_stall) begin
+	    pc <= pc;
 	end else begin
 		pc <= pc + 4;
 	end
