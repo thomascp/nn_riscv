@@ -3,7 +3,8 @@
 module nnrv_top
 (
 i_clk,
-i_rst
+i_rst,
+o_led
 );
 
 /* parameter */
@@ -16,6 +17,7 @@ parameter XLEN = 32;
 
 input wire i_clk;
 input wire i_rst;
+output wire o_led;
 
 /* local */
 
@@ -79,6 +81,8 @@ wire [XLEN-1:0] mem_id_rd_reg;
 wire wb_reg_rd_en;
 wire [4:0] wb_reg_rd;
 wire [XLEN-1:0] wb_reg_rd_reg;
+
+assign o_led = ram.ram[40][2];
 
 ram ram (
 	.i_clk(i_clk),

@@ -3,12 +3,12 @@ module nnrv_tb;
 
 reg clk;
 reg rst;
+wire led;
 
 initial begin
   clk = 0;
-  rst = 1;
-  #10 rst = 0;
-  #300 $finish;
+  rst = 0;
+  #3000 $finish;
 end
 
 always begin
@@ -30,7 +30,8 @@ end
 
 nnrv_top nnrv_top (
 	.i_clk(clk),
-	.i_rst(rst)
+	.i_rst(rst),
+	.o_led(led)
 );
 
 endmodule
