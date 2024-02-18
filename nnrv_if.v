@@ -73,6 +73,9 @@ always @ (posedge i_clk or posedge i_rst) begin
 	if (i_rst) begin
 		instr <= {XLEN{1'b0}};
 		cur_pc <= {XLEN{1'b0}};
+	end else if (i_id_hazard_stall) begin
+	    instr <= i_ram_rd_data;
+		cur_pc <= cur_pc;
 	end else begin
 		instr <= i_ram_rd_data;
 		cur_pc <= pc;
