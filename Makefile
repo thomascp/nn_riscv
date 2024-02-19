@@ -1,13 +1,22 @@
 
 # https://riscvasm.lucasteske.dev/#
 
-all:
-	iverilog -o nnrv nnrv_mem.v nnrv_wb.v nnrv_exec.v nnrv_reg.v nnrv_id.v nnrv_ram.v nnrv_if.v nnrv_top.v nnrv_tb.v
-	vvp nnrv
-	#gtkwave test.vcd
+RTL=./rtl
 
-show: all
+compile:
+	iverilog -o nnrv $(RTL)/nnrv_mem.v $(RTL)/nnrv_wb.v $(RTL)/nnrv_exec.v $(RTL)/nnrv_reg.v $(RTL)/nnrv_id.v $(RTL)/nnrv_ram.v $(RTL)/nnrv_if.v $(RTL)/nnrv_top.v $(RTL)/nnrv_tb.v
+
+run: compile
+	cp $(RTL)/ram.mem ram.mem
+	vvp nnrv
+
+show: compile run
 	gtkwave nnrv.vcd &
 
+test: compile
+	cd test ; \
+	bash test.sh ; \
+	#cd ..
+
 clean:
-	rm -rf nnrv.vcd nnrv
+	rm -rf nnrv.vcd nnrv ram.mem result.log
