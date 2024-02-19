@@ -28,7 +28,7 @@ parameter XLEN = 32;
 input wire i_clk;
 input wire i_rst;
 
-output wire [ADDR_WIDTH-1:0] o_ram_rd_addr;
+output wire [XLEN-1:0] o_ram_rd_addr;
 output reg o_ram_rd_en;
 output reg [3:0] o_ram_rd_mask;
 input wire [INSTR_WIDTH-1:0] i_ram_rd_data;
@@ -43,7 +43,7 @@ input wire i_id_hazard_stall;
 
 /* local */
 
-reg [ADDR_WIDTH-1:0] pc = {ADDR_WIDTH{1'b0}};
+reg [XLEN-1:0] pc = {XLEN{1'b0}};
 reg [INSTR_WIDTH-1:0] instr = {INSTR_WIDTH{1'b0}};
 
 reg [XLEN-1:0] cur_pc = {XLEN{1'b0}};
@@ -59,9 +59,9 @@ end
 
 always @ (posedge i_clk or posedge i_rst) begin
 	if (i_rst) begin
-		pc <= {ADDR_WIDTH{1'b0}};
+		pc <= {XLEN{1'b0}};
 	end else if (i_id_jmp_stall) begin
-		pc <= i_id_jmp_pc;
+		pc <= i_id_jmp_pc + 4;
 	end else if (i_id_hazard_stall) begin
 	    pc <= pc;
 	end else begin
@@ -73,6 +73,9 @@ always @ (posedge i_clk or posedge i_rst) begin
 	if (i_rst) begin
 		instr <= {XLEN{1'b0}};
 		cur_pc <= {XLEN{1'b0}};
+	end else if (i_id_jmp_stall) begin
+	    instr <= i_ram_rd_data;
+		cur_pc <= i_id_jmp_pc;
 	end else if (i_id_hazard_stall) begin
 	    instr <= i_ram_rd_data;
 		cur_pc <= cur_pc;

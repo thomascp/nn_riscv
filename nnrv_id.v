@@ -267,6 +267,10 @@ always @ (posedge i_clk or posedge i_rst) begin
         exec_type <= `OP_NOP;
         jmp_stall <= 1'b0;
         exec_rd_en <= 1'b0;
+        exec_pc <= 0;
+        jmp_pc <= 0;
+        exec_ram_mask <= 0;
+        exec_sign <= 0;
     end else if (hazard_stall) begin
         exec_rd <= 5'b0;
         exec_op1 <= {XLEN{1'b0}};
@@ -274,9 +278,13 @@ always @ (posedge i_clk or posedge i_rst) begin
         exec_type <= `OP_NOP;
         jmp_stall <= 1'b0;
         exec_rd_en <= 1'b0;
+        exec_pc <= 0;
+        jmp_pc <= 0;
+        exec_ram_mask <= 0;
+        exec_sign <= 0;
     end else begin
-        exec_pc <= i_if_pc;
         exec_rd <= rd_idx;
+        exec_pc <= i_if_pc;
         case(opcode)
         `OP_IMM :   begin
                     jmp_stall <= 1'b0;
@@ -424,6 +432,10 @@ always @ (posedge i_clk or posedge i_rst) begin
                                 jmp_stall <= (r1_reg >= r2_reg);
                                 jmp_pc <= i_if_pc + b_imm;
                                 end
+                    default:    begin
+                                jmp_stall <= 1'b0;
+                                jmp_pc <= 0;
+                                end
                     endcase
                     end
         `LOAD     : begin
@@ -453,6 +465,10 @@ always @ (posedge i_clk or posedge i_rst) begin
                                 exec_ram_mask <= 4'b0011;
                                 exec_sign <= 1'b0;
                                 end
+                    default:    begin
+                                exec_ram_mask <= 4'b1111;
+                                exec_sign <= 1'b0;
+                                end
                     endcase
                     end
         `STORE    : begin
@@ -470,6 +486,9 @@ always @ (posedge i_clk or posedge i_rst) begin
                                 exec_ram_mask <= 4'b0011;
                                 end
                     `F3_SW:     begin
+                                exec_ram_mask <= 4'b1111;
+                                end
+                    default:    begin
                                 exec_ram_mask <= 4'b1111;
                                 end
                     endcase

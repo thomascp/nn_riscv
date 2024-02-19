@@ -58,8 +58,12 @@ begin
     end
 end
 
-always @ (posedge i_clk) begin
-    if (i_w_en && i_w) begin
+always @ (posedge i_clk or posedge i_rst) begin
+    if (i_rst) begin
+        for (i = 0; i < REG_NUM; i = i + 1) begin
+            regs[i] <= {XLEN{1'b0}};
+        end
+    end else if (i_w_en && i_w) begin
             regs[i_w] <= i_w_reg;
     end
 end

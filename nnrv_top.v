@@ -21,15 +21,15 @@ output wire o_led;
 
 /* local */
 
-wire [ADDR_WIDTH-1:0] ram_rd1_addr;
+wire [XLEN-1:0] ram_rd1_addr;
 wire ram_rd1_en;
 wire [3:0] ram_rd1_mask;
 wire [INSTR_WIDTH-1:0] ram_rd1_data;
-wire [ADDR_WIDTH-1:0] ram_rd2_addr;
+wire [XLEN-1:0] ram_rd2_addr;
 wire ram_rd2_en;
 wire [3:0] ram_rd2_mask;
 wire [INSTR_WIDTH-1:0] ram_rd2_data;
-wire [ADDR_WIDTH-1:0] ram_wr_addr;
+wire [XLEN-1:0] ram_wr_addr;
 wire ram_wr_en;
 wire [3:0] ram_wr_mask;
 wire [INSTR_WIDTH-1:0] ram_wr_data;
@@ -82,19 +82,19 @@ wire wb_reg_rd_en;
 wire [4:0] wb_reg_rd;
 wire [XLEN-1:0] wb_reg_rd_reg;
 
-assign o_led = ram.ram[40][2];
+assign o_led = ram.ram[40][28];
 
 ram ram (
 	.i_clk(i_clk),
-	.i_rd1_addr(ram_rd1_addr),
+	.i_rd1_addr(ram_rd1_addr[ADDR_WIDTH-1:0]),
 	.i_rd1_en(ram_rd1_en),
 	.i_rd1_mask(ram_rd1_mask),
 	.o_rd1_data(ram_rd1_data),
-	.i_rd2_addr(ram_rd2_addr),
+	.i_rd2_addr(ram_rd2_addr[ADDR_WIDTH-1:0]),
 	.i_rd2_en(ram_rd2_en),
 	.i_rd2_mask(ram_rd2_mask),
 	.o_rd2_data(ram_rd2_data),
-	.i_wr_addr(ram_wr_addr),
+	.i_wr_addr(ram_wr_addr[ADDR_WIDTH-1:0]),
 	.i_wr_en(ram_wr_en),
 	.i_wr_mask(ram_wr_mask),
 	.i_wr_data(ram_wr_data)

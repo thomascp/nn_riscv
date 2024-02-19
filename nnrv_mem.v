@@ -145,11 +145,12 @@ always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
         rd_en <= 1'b0;
         rd <= 5'b0;
-        rd_reg <= {XLEN{1'b0}};
         rd_reg_exec <= {XLEN{1'b0}};
         rd_ready <= 1'b0;
         ram_rd_en <= 1'b0;
         sign <= 1'b0;
+        mask_bits <= 0;
+        rd_reg_nosign <= 0;
     end else begin
         rd_en <= i_exec_rd_en;
         rd <= i_exec_rd;
@@ -166,6 +167,8 @@ always @ (posedge i_clk or posedge i_rst) begin
         end else begin
             rd_reg_exec <= i_exec_rd_reg;
             rd_ready <= 1'b1;
+            mask_bits <= 0;
+            rd_reg_nosign <= 0;
         end
     end
 end

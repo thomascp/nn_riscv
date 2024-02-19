@@ -130,6 +130,12 @@ always @ (posedge i_clk or posedge i_rst) begin
         rd_en <= 1'b0;
         rd <= 5'b0;
         rd_ready <= 1'b0;
+        mem_ram_rd_en <= 1'b0;
+        mem_ram_wr_en <= 1'b0;
+        mem_ram_addr <= 0;
+        mem_ram_mask <= 0;
+        mem_sign <= 0;
+        mem_ram_data <= 0;
     end else begin
         rd <= i_id_rd;
         rd_en <= i_id_rd_en;
