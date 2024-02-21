@@ -1,43 +1,25 @@
 `default_nettype none
 
 module nnrv_if
+# (
+parameter INSTR_WIDTH = 32,
+parameter XLEN = 32
+)
 (
-i_clk,
-i_rst,
+input wire i_clk,
+input wire i_rst,
 
-o_ram_rd_addr,
-o_ram_rd_en,
-o_ram_rd_mask,
-i_ram_rd_data,
+output wire [XLEN-1:0] o_ram_rd_addr,
+output reg o_ram_rd_en,
+output reg [3:0] o_ram_rd_mask,
+input wire [INSTR_WIDTH-1:0] i_ram_rd_data,
 
-o_id_instr,
-o_id_cur_pc,
-i_id_jmp_stall,
-i_id_jmp_pc,
-i_id_hazard_stall
+output wire [INSTR_WIDTH-1:0] o_id_instr,
+output wire [XLEN-1:0] o_id_cur_pc,
+input wire i_id_jmp_stall,
+input wire [XLEN-1:0] i_id_jmp_pc,
+input wire i_id_hazard_stall
 );
-
-/* parameter */
-
-parameter INSTR_WIDTH = 32;
-parameter ADDR_WIDTH = 8;
-parameter XLEN = 32;
-
-/* port */
-
-input wire i_clk;
-input wire i_rst;
-
-output wire [XLEN-1:0] o_ram_rd_addr;
-output reg o_ram_rd_en;
-output reg [3:0] o_ram_rd_mask;
-input wire [INSTR_WIDTH-1:0] i_ram_rd_data;
-
-output wire [INSTR_WIDTH-1:0] o_id_instr;
-output wire [XLEN-1:0] o_id_cur_pc;
-input wire i_id_jmp_stall;
-input wire [XLEN-1:0] i_id_jmp_pc;
-input wire i_id_hazard_stall;
 
 /* define */
 

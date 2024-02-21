@@ -1,44 +1,26 @@
 `default_nettype none
 
 module nnrv_reg
+# (
+parameter XLEN = 32,
+parameter REG_NUM = 32
+)
 (
-i_clk,
-i_rst,
+input wire i_clk,
+input wire i_rst,
 
-i_r1_en,
-i_r1,
-i_r2_en,
-i_r2,
+input wire i_r1_en,
+input wire [4:0] i_r1,
+input wire i_r2_en,
+input wire [4:0] i_r2,
 
-i_w_en,
-i_w,
-i_w_reg,
+input wire i_w_en,
+input wire [4:0] i_w,
+input wire [XLEN-1:0] i_w_reg,
 
-o_r1_reg,
-o_r2_reg
+output wire [XLEN-1:0] o_r1_reg,
+output wire [XLEN-1:0] o_r2_reg
 );
-
-/* parameter */
-
-parameter XLEN = 32;
-parameter REG_NUM = 32;
-
-/* port */
-
-input wire i_clk;
-input wire i_rst;
-
-input wire i_r1_en;
-input wire [4:0] i_r1;
-input wire i_r2_en;
-input wire [4:0] i_r2;
-
-input wire i_w_en;
-input wire [4:0] i_w;
-input wire [XLEN-1:0] i_w_reg;
-
-output wire [XLEN-1:0] o_r1_reg;
-output wire [XLEN-1:0] o_r2_reg;
 
 /* define */
 

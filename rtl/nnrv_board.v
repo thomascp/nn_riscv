@@ -1,12 +1,9 @@
 
 module nnrv_board
 (
-clk,
-led
+input wire clk,
+output wire led
 );
-
-input wire clk;
-output wire led;
 
 reg rst = 1'b0;
 

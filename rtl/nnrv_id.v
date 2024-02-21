@@ -1,88 +1,51 @@
 `default_nettype none
 
 module nnrv_id
+# (
+parameter INSTR_WIDTH = 32,
+parameter XLEN = 32
+)
 (
-i_clk,
-i_rst,
+input wire i_clk,
+input wire i_rst,
 
-i_if_instr,
-i_if_pc,
-o_if_jmp_stall,
-o_if_jmp_pc,
-o_if_hazard_stall,
+input wire [INSTR_WIDTH-1:0] i_if_instr,
+input wire [XLEN-1:0] i_if_pc,
+output wire o_if_jmp_stall,
+output wire [XLEN-1:0] o_if_jmp_pc,
+output wire o_if_hazard_stall,
 
-o_exec_pc,
-o_exec_op1,
-o_exec_op2,
-o_exec_type,
-o_exec_rd_en,
-o_exec_rd,
-o_exec_ram_mask,
-o_exec_sign,
+output wire [XLEN-1:0] o_exec_pc,
+output wire [XLEN-1:0] o_exec_op1,
+output wire [XLEN-1:0] o_exec_op2,
+output wire [3:0] o_exec_type,
+output wire o_exec_rd_en,
+output wire [4:0] o_exec_rd,
+output wire [3:0] o_exec_ram_mask,
+output wire o_exec_sign,
 
-o_reg_r1_en,
-o_reg_r1,
-i_reg_r1_reg,
+output wire o_reg_r1_en,
+output wire [4:0] o_reg_r1,
+input wire [XLEN-1:0] i_reg_r1_reg,
 
-o_reg_r2_en,
-o_reg_r2,
-i_reg_r2_reg,
+output wire o_reg_r2_en,
+output wire [4:0] o_reg_r2,
+input wire [XLEN-1:0] i_reg_r2_reg,
 
-i_exec_rd_en,
-i_exec_rd_ready,
-i_exec_rd,
-i_exec_rd_reg,
+input wire i_exec_rd_en,
+input wire i_exec_rd_ready,
+input wire [4:0] i_exec_rd,
+input wire [XLEN-1:0]i_exec_rd_reg,
 
-i_mem_rd_en,
-i_mem_rd_ready,
-i_mem_rd,
-i_mem_rd_reg
+input wire i_mem_rd_en,
+input wire i_mem_rd_ready,
+input wire [4:0] i_mem_rd,
+input wire [XLEN-1:0]i_mem_rd_reg
 );
 
-/* parameter */
-
-parameter INSTR_WIDTH = 32;
-parameter XLEN = 32;
-
-/* port */
-
-input wire i_clk;
-input wire i_rst;
-
-input wire [INSTR_WIDTH-1:0] i_if_instr;
-input wire [XLEN-1:0] i_if_pc;
-output wire o_if_jmp_stall;
-output wire [XLEN-1:0] o_if_jmp_pc;
-output wire o_if_hazard_stall;
-
-output wire [XLEN-1:0] o_exec_pc;
-output wire [XLEN-1:0] o_exec_op1;
-output wire [XLEN-1:0] o_exec_op2;
-output wire [3:0] o_exec_type;
-output wire o_exec_rd_en;
-output wire [4:0] o_exec_rd;
-output wire [3:0] o_exec_ram_mask;
-output wire o_exec_sign;
-
-output wire o_reg_r1_en;
-output wire [4:0] o_reg_r1;
-input wire [XLEN-1:0] i_reg_r1_reg;
-
-output wire o_reg_r2_en;
-output wire [4:0] o_reg_r2;
-input wire [XLEN-1:0] i_reg_r2_reg;
-
-input wire i_exec_rd_en;
-input wire i_exec_rd_ready;
-input wire [4:0] i_exec_rd;
-input wire [XLEN-1:0]i_exec_rd_reg;
-
-input wire i_mem_rd_en;
-input wire i_mem_rd_ready;
-input wire [4:0] i_mem_rd;
-input wire [XLEN-1:0]i_mem_rd_reg;
-
 /* define */
+
+`include "nnrv_defines.vh"
 
 `define OP_IMM      7'b0010011
 `define LUI         7'b0110111
@@ -121,21 +84,6 @@ input wire [XLEN-1:0]i_mem_rd_reg;
 `define F3_LW           3'b010
 `define F3_LBU          3'b100
 `define F3_LHU          3'b101
-
-`define OP_NOP          4'b0000
-`define OP_ADD          4'b0001
-`define OP_SUB          4'b0010
-`define OP_SLT          4'b0011
-`define OP_SLTU         4'b0100
-`define OP_XOR          4'b0101
-`define OP_OR           4'b0110
-`define OP_AND          4'b0111
-`define OP_SLL          4'b1000
-`define OP_SRL          4'b1001
-`define OP_SRA          4'b1010
-`define OP_JMP          4'b1011
-`define OP_LOAD         4'b1100
-`define OP_STORE        4'b1101
 
 `define OP_INSTR_NOP        32'h00000013
 

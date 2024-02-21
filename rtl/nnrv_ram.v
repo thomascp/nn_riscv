@@ -1,49 +1,29 @@
 `default_nettype none
 
 module ram
+# (
+parameter DATA_WIDTH = 32,
+parameter ADDR_WIDTH = 8,
+parameter RAM_DEPTH = 1 << ADDR_WIDTH
+)
 (
-i_clk,
+input wire i_clk,
 
-i_rd1_addr,
-i_rd1_en,
-i_rd1_mask,
-o_rd1_data,
+input wire [ADDR_WIDTH-1:0] i_rd1_addr,
+input wire i_rd1_en,
+input wire [3:0] i_rd1_mask,
+output wire [DATA_WIDTH-1:0] o_rd1_data,
 
-i_rd2_addr,
-i_rd2_en,
-i_rd2_mask,
-o_rd2_data,
+input wire [ADDR_WIDTH-1:0] i_rd2_addr,
+input wire i_rd2_en,
+input wire [3:0] i_rd2_mask,
+output wire [DATA_WIDTH-1:0] o_rd2_data,
 
-i_wr_addr,
-i_wr_en,
-i_wr_mask,
-i_wr_data
+input wire [ADDR_WIDTH-1:0] i_wr_addr,
+input wire i_wr_en,
+input wire [3:0] i_wr_mask,
+input wire [DATA_WIDTH-1:0] i_wr_data
 );
-
-/* parameter */
-
-parameter DATA_WIDTH = 32;
-parameter ADDR_WIDTH = 8;
-parameter RAM_DEPTH = 1 << ADDR_WIDTH;
-
-/* port */
-
-input wire i_clk;
-
-input wire [ADDR_WIDTH-1:0] i_rd1_addr;
-input wire i_rd1_en;
-input wire [3:0] i_rd1_mask;
-output wire [DATA_WIDTH-1:0] o_rd1_data;
-
-input wire [ADDR_WIDTH-1:0] i_rd2_addr;
-input wire i_rd2_en;
-input wire [3:0] i_rd2_mask;
-output wire [DATA_WIDTH-1:0] o_rd2_data;
-
-input wire [ADDR_WIDTH-1:0] i_wr_addr;
-input wire i_wr_en;
-input wire [3:0] i_wr_mask;
-input wire [DATA_WIDTH-1:0] i_wr_data;
 
 /* local */
 

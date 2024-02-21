@@ -1,23 +1,16 @@
 `default_nettype none
 
 module nnrv_top
+# (
+parameter INSTR_WIDTH = 32,
+parameter ADDR_WIDTH = 8,
+parameter XLEN = 32
+)
 (
-i_clk,
-i_rst,
-o_led
+input wire i_clk,
+input wire i_rst,
+output wire o_led
 );
-
-/* parameter */
-
-parameter INSTR_WIDTH = 32;
-parameter ADDR_WIDTH = 8;
-parameter XLEN = 32;
-
-/* port */
-
-input wire i_clk;
-input wire i_rst;
-output wire o_led;
 
 /* local */
 

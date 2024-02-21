@@ -1,78 +1,43 @@
 `default_nettype none
 
 module nnrv_mem
+# (
+parameter XLEN = 32
+)
 (
-i_clk,
-i_rst,
+input wire i_clk,
+input wire i_rst,
 
-o_id_rd_en,
-o_id_rd_ready,
-o_id_rd,
-o_id_rd_reg,
+output wire o_id_rd_en,
+output wire o_id_rd_ready,
+output wire [4:0] o_id_rd,
+output wire [XLEN-1:0] o_id_rd_reg,
 
-i_exec_rd_en,
-i_exec_rd,
-i_exec_rd_reg,
-i_exec_ram_wr_en,
-i_exec_ram_rd_en,
-i_exec_ram_addr,
-i_exec_ram_data,
-i_exec_ram_mask,
-i_exec_sign,
+input wire i_exec_rd_en,
+input wire [4:0] i_exec_rd,
+input wire [XLEN-1:0] i_exec_rd_reg,
 
-o_ram_rd_addr,
-o_ram_rd_en,
-o_ram_rd_mask,
-i_ram_rd_data,
+input wire i_exec_ram_wr_en,
+input wire i_exec_ram_rd_en,
+input wire [XLEN-1:0] i_exec_ram_addr,
+input wire [XLEN-1:0] i_exec_ram_data,
+input wire [3:0] i_exec_ram_mask,
+input wire i_exec_sign,
 
-o_ram_wr_addr,
-o_ram_wr_en,
-o_ram_wr_mask,
-o_ram_wr_data,
+output wire [XLEN-1:0] o_ram_rd_addr,
+output wire o_ram_rd_en,
+output wire [3:0] o_ram_rd_mask,
+input wire [XLEN-1:0] i_ram_rd_data,
 
-o_wb_rd_en,
-o_wb_rd,
-o_wb_rd_reg
+output wire [XLEN-1:0] o_ram_wr_addr,
+output wire o_ram_wr_en,
+output wire [3:0] o_ram_wr_mask,
+output wire [XLEN-1:0] o_ram_wr_data,
+
+output wire o_wb_rd_en,
+output wire [4:0] o_wb_rd,
+output wire [XLEN-1:0] o_wb_rd_reg
 );
-
-/* parameter */
-
-parameter XLEN = 32;
-
-/* port */
-
-input wire i_clk;
-input wire i_rst;
-
-output wire o_id_rd_en;
-output wire o_id_rd_ready;
-output wire [4:0] o_id_rd;
-output wire [XLEN-1:0] o_id_rd_reg;
-
-input wire i_exec_rd_en;
-input wire [4:0] i_exec_rd;
-input wire [XLEN-1:0] i_exec_rd_reg;
-
-input wire i_exec_ram_wr_en;
-input wire i_exec_ram_rd_en;
-input wire [XLEN-1:0] i_exec_ram_addr;
-input wire [XLEN-1:0] i_exec_ram_data;
-input wire [3:0] i_exec_ram_mask;
-input wire i_exec_sign;
-
-output wire [XLEN-1:0] o_ram_rd_addr;
-output wire o_ram_rd_en;
-output wire [3:0] o_ram_rd_mask;
-input wire [XLEN-1:0] i_ram_rd_data;
-
-output wire [XLEN-1:0] o_ram_wr_addr;
-output wire o_ram_wr_en;
-output wire [3:0] o_ram_wr_mask;
-output wire [XLEN-1:0] o_ram_wr_data;
-
-output wire o_wb_rd_en;
-output wire [4:0] o_wb_rd;
-output wire [XLEN-1:0] o_wb_rd_reg;
 
 /* define */
 

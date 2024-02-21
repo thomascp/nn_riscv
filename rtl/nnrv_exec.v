@@ -1,87 +1,43 @@
 `default_nettype none
 
 module nnrv_exec
+# (
+parameter XLEN = 32
+)
 (
-i_clk,
-i_rst,
+input wire i_clk,
+input wire i_rst,
 
-i_id_op1,
-i_id_op2,
-i_id_exec_type,
-i_id_ram_mask,
-i_id_sign,
+input wire [XLEN-1:0] i_id_op1,
+input wire [XLEN-1:0] i_id_op2,
+input wire [3:0] i_id_exec_type,
+input wire [3:0] i_id_ram_mask,
+input wire i_id_sign,
 
-i_id_rd,
-i_id_rd_en,
-i_id_pc,
+input wire [4:0] i_id_rd,
+input wire i_id_rd_en,
+input wire [XLEN-1:0] i_id_pc,
 
-o_id_rd_en,
-o_id_rd_ready,
-o_id_rd,
-o_id_rd_reg,
+output wire o_id_rd_en,
+output wire o_id_rd_ready,
+output wire [4:0] o_id_rd,
+output wire [XLEN-1:0] o_id_rd_reg,
 
-o_mem_rd_en,
-o_mem_rd,
-o_mem_rd_reg,
-o_mem_ram_wr_en,
-o_mem_ram_rd_en,
-o_mem_ram_addr,
-o_mem_ram_data,
-o_mem_ram_mask,
-o_mem_sign
+output wire o_mem_rd_en,
+output wire [4:0] o_mem_rd,
+output wire [XLEN-1:0] o_mem_rd_reg,
+
+output wire o_mem_ram_wr_en,
+output wire o_mem_ram_rd_en,
+output wire [XLEN-1:0] o_mem_ram_addr,
+output wire [XLEN-1:0] o_mem_ram_data,
+output wire [3:0] o_mem_ram_mask,
+output wire o_mem_sign
 );
-
-/* parameter */
-
-parameter XLEN = 32;
-parameter ADDR_WIDTH = 8;
-
-/* port */
-
-input wire i_clk;
-input wire i_rst;
-
-input wire [XLEN-1:0] i_id_op1;
-input wire [XLEN-1:0] i_id_op2;
-input wire [3:0] i_id_exec_type;
-input wire [3:0] i_id_ram_mask;
-input wire i_id_sign;
-
-input wire [4:0] i_id_rd;
-input wire i_id_rd_en;
-input wire [XLEN-1:0] i_id_pc;
-
-output wire o_id_rd_en;
-output wire o_id_rd_ready;
-output wire [4:0] o_id_rd;
-output wire [XLEN-1:0] o_id_rd_reg;
-
-output wire o_mem_rd_en;
-output wire [4:0] o_mem_rd;
-output wire [XLEN-1:0] o_mem_rd_reg;
-
-output wire o_mem_ram_wr_en;
-output wire o_mem_ram_rd_en;
-output wire [XLEN-1:0] o_mem_ram_addr;
-output wire [XLEN-1:0] o_mem_ram_data;
-output wire [3:0] o_mem_ram_mask;
-output wire o_mem_sign;
 
 /* define */
 
-`define OP_ADD          4'b0001
-`define OP_SUB          4'b0010
-`define OP_SLT          4'b0011
-`define OP_SLTU         4'b0100
-`define OP_XOR          4'b0101
-`define OP_OR           4'b0110
-`define OP_AND          4'b0111
-`define OP_SLL          4'b1000
-`define OP_SRL          4'b1001
-`define OP_SRA          4'b1010
-`define OP_JMP          4'b1011
-`define OP_LOAD         4'b1100
-`define OP_STORE        4'b1101
+`include "nnrv_defines.vh"
 
 /* local */
 
