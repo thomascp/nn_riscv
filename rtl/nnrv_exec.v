@@ -2,7 +2,8 @@
 
 module nnrv_exec
 # (
-parameter XLEN = 32
+parameter XLEN = 64,
+parameter MASK_WIDTH = 8
 )
 (
 input wire i_clk,
@@ -11,8 +12,9 @@ input wire i_rst,
 input wire [XLEN-1:0] i_id_op1,
 input wire [XLEN-1:0] i_id_op2,
 input wire [3:0] i_id_exec_type,
-input wire [3:0] i_id_ram_mask,
+input wire [MASK_WIDTH-1:0] i_id_ram_mask,
 input wire i_id_sign,
+input wire i_id_op_32bit,
 
 input wire [4:0] i_id_rd,
 input wire i_id_rd_en,
@@ -31,7 +33,7 @@ output wire o_mem_ram_wr_en,
 output wire o_mem_ram_rd_en,
 output wire [XLEN-1:0] o_mem_ram_addr,
 output wire [XLEN-1:0] o_mem_ram_data,
-output wire [3:0] o_mem_ram_mask,
+output wire [MASK_WIDTH-1:0] o_mem_ram_mask,
 output wire o_mem_sign
 );
 
@@ -45,9 +47,9 @@ reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 
-wire [XLEN-1:0] ram_full_mask;
-wire [1:0] op2_shift;
-wire [4:0] op2_full_shift;
+reg [XLEN-1:0] ram_full_mask;
+wire [2:0] op2_shift;
+wire [5:0] op2_full_shift;
 
 reg mem_ram_wr_en;
 reg mem_ram_rd_en;
@@ -58,14 +60,18 @@ reg mem_sign;
 
 reg rd_ready = 1'b0;
 
+reg op_32bit = 1'b0;
+wire [XLEN-1:0] rd_reg_wd;
+
 /* logic */
+
+assign rd_reg_wd = (op_32bit) ? {{32{rd_reg[31]}}, rd_reg[31:0]} : rd_reg;
 
 assign o_mem_rd_en = rd_en;
 assign o_mem_rd = rd;
-assign o_mem_rd_reg = rd_reg;
+assign o_mem_rd_reg = rd_reg_wd;
 
-assign ram_full_mask = {{8{i_id_ram_mask[3]}}, {8{i_id_ram_mask[2]}}, {8{i_id_ram_mask[1]}}, {8{i_id_ram_mask[0]}}};
-assign op2_shift = i_id_op2[1:0];
+assign op2_shift = i_id_op2[2:0];
 assign op2_full_shift = {3'b000, op2_shift} << 3;
 
 assign o_mem_ram_wr_en = mem_ram_wr_en;
@@ -78,7 +84,13 @@ assign o_mem_sign = mem_sign;
 assign o_id_rd_en = rd_en;
 assign o_id_rd_ready = rd_ready;
 assign o_id_rd = rd;
-assign o_id_rd_reg = rd_reg;
+assign o_id_rd_reg = rd_reg_wd;
+
+always @* begin
+  for (integer i = 0; i < MASK_WIDTH; i++) begin
+    ram_full_mask[i * 8 +: 8] = i_id_ram_mask[i] ? 8'hFF : 8'h00;
+  end
+end
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
@@ -92,9 +104,11 @@ always @ (posedge i_clk or posedge i_rst) begin
         mem_ram_mask <= 0;
         mem_sign <= 0;
         mem_ram_data <= 0;
+        op_32bit <= 1'b0;
     end else begin
         rd <= i_id_rd;
         rd_en <= i_id_rd_en;
+        op_32bit <= i_id_op_32bit;
         case(i_id_exec_type)
         `OP_SUB  : begin
                    rd_reg <= i_id_op1 - i_id_op2;

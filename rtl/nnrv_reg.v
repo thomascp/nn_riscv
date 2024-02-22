@@ -2,7 +2,7 @@
 
 module nnrv_reg
 # (
-parameter XLEN = 32,
+parameter XLEN = 64,
 parameter REG_NUM = 32
 )
 (

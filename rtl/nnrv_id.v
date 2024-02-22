@@ -3,7 +3,8 @@
 module nnrv_id
 # (
 parameter INSTR_WIDTH = 32,
-parameter XLEN = 32
+parameter XLEN = 64,
+parameter MASK_WIDTH = 8
 )
 (
 input wire i_clk,
@@ -21,8 +22,9 @@ output wire [XLEN-1:0] o_exec_op2,
 output wire [3:0] o_exec_type,
 output wire o_exec_rd_en,
 output wire [4:0] o_exec_rd,
-output wire [3:0] o_exec_ram_mask,
+output wire [MASK_WIDTH-1:0] o_exec_ram_mask,
 output wire o_exec_sign,
+output wire o_exec_op_32bit,
 
 output wire o_reg_r1_en,
 output wire [4:0] o_reg_r1,
@@ -58,6 +60,8 @@ input wire [XLEN-1:0]i_mem_rd_reg
 `define STORE       7'b0100011
 `define MISC_MEM    7'b0001111
 `define SYSTEM      7'b1110011
+`define OP_IMM_32   7'b0011011
+`define OP_32       7'b0111011
 
 `define F3_ADD_SUB      3'b000
 `define F3_SLT          3'b010
@@ -78,12 +82,15 @@ input wire [XLEN-1:0]i_mem_rd_reg
 `define F3_SB           3'b000
 `define F3_SH           3'b001
 `define F3_SW           3'b010
+`define F3_SD           3'b011
 
 `define F3_LB           3'b000
 `define F3_LH           3'b001
 `define F3_LW           3'b010
+`define F3_LD           3'b011
 `define F3_LBU          3'b100
 `define F3_LHU          3'b101
+`define F3_LWU          3'b110
 
 `define OP_INSTR_NOP        32'h00000013
 
@@ -104,6 +111,7 @@ wire imm_30;
 wire imm_20;
 wire imm_7;
 wire imm_sign;
+wire [5:0] shamt_6;
 wire [4:0] shamt_5;
 wire [XLEN-1:0] i_imm;
 wire [XLEN-1:0] s_imm;
@@ -130,7 +138,7 @@ reg [3:0] exec_type = 4'b0;
 reg exec_rd_en = 1'b0;
 reg [4:0] exec_rd = 5'b0;
 reg [XLEN-1:0] exec_pc = {XLEN{1'b0}};
-reg [3:0] exec_ram_mask = 4'b0000;
+reg [MASK_WIDTH-1:0] exec_ram_mask = 4'b0000;
 reg exec_sign = 1'b0;
 
 reg reg_r1_en = 1'b1;
@@ -138,6 +146,8 @@ reg reg_r2_en = 1'b1;
 
 reg jmp_stall = 1'b0;
 reg [XLEN-1:0] jmp_pc = {XLEN{1'b0}};
+
+reg op_32bit = 1'b0;
 
 wire [XLEN-1:0] r1_reg;
 wire [XLEN-1:0] r2_reg;
@@ -159,11 +169,12 @@ assign imm_sign = id_instr[31];
 assign imm_7 = id_instr[7];
 assign imm_20 = id_instr[20];
 assign imm_30 = id_instr[30];
-assign i_imm =  {{21{imm_sign}}, imm_30_25, imm_24_21, imm_20};
-assign s_imm = {{21{imm_sign}}, imm_30_25, imm_11_8, imm_7};
-assign b_imm = {{20{imm_sign}}, imm_7, imm_30_25, imm_11_8, 1'b0};
-assign u_imm = {imm_sign, imm_30_20, imm_19_12, 12'b0};
-assign j_imm = {{12{imm_sign}}, imm_19_12, imm_20, imm_30_25, imm_24_21, 1'b0};
+assign i_imm =  {{53{imm_sign}}, imm_30_25, imm_24_21, imm_20};
+assign s_imm = {{53{imm_sign}}, imm_30_25, imm_11_8, imm_7};
+assign b_imm = {{52{imm_sign}}, imm_7, imm_30_25, imm_11_8, 1'b0};
+assign u_imm = {{33{imm_sign}}, imm_30_20, imm_19_12, 12'b0};
+assign j_imm = {{44{imm_sign}}, imm_19_12, imm_20, imm_30_25, imm_24_21, 1'b0};
+assign shamt_6 = id_instr[25:20];
 assign shamt_5 = id_instr[24:20];
 
 assign rs1_valid = (opcode == `JALR) || (opcode == `BRANCH) || (opcode == `LOAD)
@@ -187,6 +198,8 @@ assign o_exec_pc = exec_pc;
 assign o_exec_ram_mask = exec_ram_mask;
 
 assign o_exec_sign = exec_sign;
+
+assign o_exec_op_32bit = op_32bit;
 
 assign id_hazard_stall = (exec_rd_en) && (exec_rd != 0) &&
                 (((rs1_valid) && (exec_rd == rs1_idx)) || ((rs2_valid) && (exec_rd == rs2_idx)));
@@ -238,6 +251,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     jmp_stall <= 1'b0;
                     exec_op1 <= r1_reg;
                     exec_rd_en <= 1'b1;
+                    op_32bit <= 0;
                     case(funct3)
                     `F3_ADD_SUB: begin
                                 exec_type <= `OP_ADD;
@@ -265,7 +279,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                                 end
                     `F3_SLL:     begin
                                 exec_type <= `OP_SLL;
-                                exec_op2 <= shamt_5;
+                                exec_op2 <= shamt_6;
                                 end
                     `F3_SRL_SRA: begin
                                 case(imm_30)
@@ -273,6 +287,36 @@ always @ (posedge i_clk or posedge i_rst) begin
                                         exec_type <= `OP_SRL;
                                         end
                                 1'b1:    begin
+                                        exec_type <= `OP_SRA;
+                                        end
+                                endcase
+                                exec_op2 <= shamt_6;
+                                end
+                    endcase
+                    end
+        `OP_IMM_32: begin
+                    jmp_stall <= 1'b0;
+                    exec_rd_en <= 1'b1;
+                    op_32bit <= 1;
+                    case(funct3)
+                    `F3_ADD_SUB:begin
+                                exec_type <= `OP_ADD;
+                                exec_op1 <= r1_reg;
+                                exec_op2 <= i_imm;
+                                end
+                    `F3_SLL:    begin
+                                exec_type <= `OP_SLL;
+                                exec_op1 <= r1_reg;
+                                exec_op2 <= shamt_5;
+                                end
+                    `F3_SRL_SRA:begin
+                                case(imm_30)
+                                1'b0:   begin
+                                        exec_op1 <= {32'b0, r1_reg[31:0]};
+                                        exec_type <= `OP_SRL;
+                                        end
+                                1'b1:   begin
+                                        exec_op1 <= {{32{r1_reg[31]}}, r1_reg[31:0]};
                                         exec_type <= `OP_SRA;
                                         end
                                 endcase
@@ -297,10 +341,11 @@ always @ (posedge i_clk or posedge i_rst) begin
         `OP       : begin
                     jmp_stall <= 1'b0;
                     exec_op1 <= r1_reg;
-                    exec_op2 <= r2_reg;
                     exec_rd_en <= 1'b1;
+                    op_32bit <= 0;
                     case(funct3)
-                    `F3_ADD_SUB: begin
+                    `F3_ADD_SUB:begin
+                                exec_op2 <= r2_reg;
                                 case(imm_30)
                                 1'b0:    begin
                                         exec_type <= `OP_ADD;
@@ -310,30 +355,74 @@ always @ (posedge i_clk or posedge i_rst) begin
                                         end
                                 endcase
                                 end
-                    `F3_SLT:     begin
+                    `F3_SLT:    begin
+                                exec_op2 <= r2_reg;
                                 exec_type <= `OP_SLT;
                                 end
-                    `F3_SLTU:    begin
+                    `F3_SLTU:   begin
+                                exec_op2 <= r2_reg;
                                 exec_type <= `OP_SLTU;
                                 end
-                    `F3_XOR:     begin
+                    `F3_XOR:    begin
+                                exec_op2 <= r2_reg;
                                 exec_type <= `OP_XOR;
                                 end
-                    `F3_OR:      begin
+                    `F3_OR:     begin
+                                exec_op2 <= r2_reg;
                                 exec_type <= `OP_OR;
                                 end
-                    `F3_AND:     begin
+                    `F3_AND:    begin
+                                exec_op2 <= r2_reg;
                                 exec_type <= `OP_AND;
                                 end
-                    `F3_SLL:     begin
+                    `F3_SLL:    begin
+                                exec_op2 <= r2_reg[5:0];
                                 exec_type <= `OP_SLL;
                                 end
-                    `F3_SRL_SRA: begin
+                    `F3_SRL_SRA:begin
+                                exec_op2 <= r2_reg[5:0];
                                 case(imm_30)
                                 1'b0:    begin
                                         exec_type <= `OP_SRL;
                                         end
                                 1'b1:    begin
+                                        exec_type <= `OP_SRA;
+                                        end
+                                endcase
+                                end
+                    endcase
+                    end
+        `OP_32    : begin
+                    jmp_stall <= 1'b0;
+                    exec_rd_en <= 1'b1;
+                    op_32bit <= 1;
+                    case(funct3)
+                    `F3_ADD_SUB:begin
+                                exec_op1 <= r1_reg;
+                                exec_op2 <= r2_reg;
+                                case(imm_30)
+                                1'b0:   begin
+                                        exec_type <= `OP_ADD;
+                                        end
+                                1'b1:   begin
+                                        exec_type <= `OP_SUB;
+                                        end
+                                endcase
+                                end
+                    `F3_SLL:    begin
+                                exec_op1 <= r1_reg;
+                                exec_op2 <= r2_reg[4:0];
+                                exec_type <= `OP_SLL;
+                                end
+                    `F3_SRL_SRA:begin
+                                exec_op2 <= r2_reg[4:0];
+                                case(imm_30)
+                                1'b0:   begin
+                                        exec_op1 <= {32'd0, r1_reg[31:0]};
+                                        exec_type <= `OP_SRL;
+                                        end
+                                1'b1:   begin
+                                        exec_op1 <= {{32{r1_reg[31]}}, r1_reg[31:0]};
                                         exec_type <= `OP_SRA;
                                         end
                                 endcase
@@ -394,27 +483,35 @@ always @ (posedge i_clk or posedge i_rst) begin
                     exec_op2 <= r1_reg + i_imm;
                     case(funct3)
                     `F3_LB:     begin
-                                exec_ram_mask <= 4'b0001;
+                                exec_ram_mask <= 8'b00000001;
                                 exec_sign <= 1'b1;
                                 end
                     `F3_LH:     begin
-                                exec_ram_mask <= 4'b0011;
+                                exec_ram_mask <= 8'b00000011;
                                 exec_sign <= 1'b1;
                                 end
                     `F3_LW:     begin
-                                exec_ram_mask <= 4'b1111;
+                                exec_ram_mask <= 8'b00001111;
+                                exec_sign <= 1'b1;
+                                end
+                    `F3_LD:     begin
+                                exec_ram_mask <= 8'b11111111;
                                 exec_sign <= 1'b0;
                                 end
                     `F3_LBU:    begin
-                                exec_ram_mask <= 4'b0001;
+                                exec_ram_mask <= 8'b00000001;
                                 exec_sign <= 1'b0;
                                 end
                     `F3_LHU:    begin
-                                exec_ram_mask <= 4'b0011;
+                                exec_ram_mask <= 8'b00000011;
+                                exec_sign <= 1'b0;
+                                end
+                    `F3_LWU:    begin
+                                exec_ram_mask <= 8'b00001111;
                                 exec_sign <= 1'b0;
                                 end
                     default:    begin
-                                exec_ram_mask <= 4'b1111;
+                                exec_ram_mask <= 8'b00000000;
                                 exec_sign <= 1'b0;
                                 end
                     endcase
@@ -428,16 +525,19 @@ always @ (posedge i_clk or posedge i_rst) begin
                     exec_sign <= 1'b0;
                     case(funct3)
                     `F3_SB:     begin
-                                exec_ram_mask <= 4'b0001;
+                                exec_ram_mask <= 8'b00000001;
                                 end
                     `F3_SH:     begin
-                                exec_ram_mask <= 4'b0011;
+                                exec_ram_mask <= 8'b00000011;
                                 end
                     `F3_SW:     begin
-                                exec_ram_mask <= 4'b1111;
+                                exec_ram_mask <= 8'b00001111;
+                                end
+                    `F3_SD:     begin
+                                exec_ram_mask <= 8'b11111111;
                                 end
                     default:    begin
-                                exec_ram_mask <= 4'b1111;
+                                exec_ram_mask <= 8'b00000000;
                                 end
                     endcase
                     end

@@ -2,7 +2,8 @@
 
 module nnrv_mem
 # (
-parameter XLEN = 32
+parameter XLEN = 64,
+parameter MASK_WIDTH = 8
 )
 (
 input wire i_clk,
@@ -21,17 +22,17 @@ input wire i_exec_ram_wr_en,
 input wire i_exec_ram_rd_en,
 input wire [XLEN-1:0] i_exec_ram_addr,
 input wire [XLEN-1:0] i_exec_ram_data,
-input wire [3:0] i_exec_ram_mask,
+input wire [MASK_WIDTH-1:0] i_exec_ram_mask,
 input wire i_exec_sign,
 
 output wire [XLEN-1:0] o_ram_rd_addr,
 output wire o_ram_rd_en,
-output wire [3:0] o_ram_rd_mask,
+output wire [MASK_WIDTH-1:0] o_ram_rd_mask,
 input wire [XLEN-1:0] i_ram_rd_data,
 
 output wire [XLEN-1:0] o_ram_wr_addr,
 output wire o_ram_wr_en,
-output wire [3:0] o_ram_wr_mask,
+output wire [MASK_WIDTH-1:0] o_ram_wr_mask,
 output wire [XLEN-1:0] o_ram_wr_data,
 
 output wire o_wb_rd_en,
@@ -49,8 +50,8 @@ reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 reg [XLEN-1:0] rd_reg_exec = {XLEN{1'b0}};
 reg [XLEN-1:0] rd_reg_nosign = {XLEN{1'b0}};
 
-reg [4:0] mask_bits = 0;
-reg [4:0] right_shift = 0;
+reg [5:0] mask_bits = 0;
+reg [5:0] right_shift = 0;
 
 reg rd_ready = 1'b0;
 
@@ -84,6 +85,14 @@ always @ * begin
         right_shift = 16;
     end else if (o_ram_rd_mask[3:0] == 4'b1000) begin
         right_shift = 24;
+    end else if (o_ram_rd_mask[4:0] == 5'b10000) begin
+        right_shift = 32;
+    end else if (o_ram_rd_mask[5:0] == 6'b100000) begin
+        right_shift = 40;
+    end else if (o_ram_rd_mask[6:0] == 7'b1000000) begin
+        right_shift = 48;
+    end else if (o_ram_rd_mask[7:0] == 8'b10000000) begin
+        right_shift = 56;
     end else begin
         right_shift = 0;
     end
@@ -94,8 +103,9 @@ always @ * begin
     if (ram_rd_en) begin
         if (sign) begin
             case (mask_bits)
-                8:  rd_reg = {{24{rd_reg_nosign[7]}}, rd_reg_nosign[7:0]};
-                16: rd_reg = {{16{rd_reg_nosign[15]}}, rd_reg_nosign[15:0]};
+                8:  rd_reg = {{56{rd_reg_nosign[7]}}, rd_reg_nosign[7:0]};
+                16: rd_reg = {{48{rd_reg_nosign[15]}}, rd_reg_nosign[15:0]};
+                32: rd_reg = {{32{rd_reg_nosign[31]}}, rd_reg_nosign[31:0]};
                 default: rd_reg = rd_reg_nosign;
             endcase
         end else begin
@@ -123,9 +133,13 @@ always @ (posedge i_clk or posedge i_rst) begin
         sign <= i_exec_sign;
         if (i_exec_ram_rd_en) begin
             case(i_exec_ram_mask)
-                4'b0001, 4'b0010, 4'b0100, 4'b1000 : mask_bits <= 8;
-                4'b0011, 4'b0110, 4'b1100          : mask_bits <= 16;
-                default : mask_bits <= 32;
+                8'b00000001, 8'b00000010, 8'b00000100, 8'b00001000,
+                8'b00010000, 8'b00100000, 8'b01000000, 8'b10000000 : mask_bits <= 8;
+                8'b00000011, 8'b00000110, 8'b00001100, 8'b00011000,
+                8'b00110000, 8'b01100000, 8'b11000000              : mask_bits <= 16;
+                8'b00001111, 8'b00011110, 8'b00111100, 8'b01111000,
+                8'b11110000                                        : mask_bits <= 32;
+                default : mask_bits <= 64;
             endcase
             rd_reg_nosign <= (i_ram_rd_data >> right_shift);
             rd_ready <= 1'b1;

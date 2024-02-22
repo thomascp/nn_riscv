@@ -2,7 +2,7 @@
 
 module nnrv_wb
 # (
-parameter XLEN = 32
+parameter XLEN = 64
 )
 (
 input wire i_clk,

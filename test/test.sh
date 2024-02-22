@@ -1,5 +1,9 @@
 #!/bin/bash
 
+do_clean () {
+   rm -rf nnrv.vcd result.log test.out ram.mem test.bin a.out
+}
+
 for as in *.s
 do
     echo "--> test "$as
@@ -13,6 +17,7 @@ do
     then
         echo "----- Failure -----"
         echo $target".gt doesn't exist"
+        do_clean
         exit 1
     fi
     diffout=$(diff -w result.log $target".gt")
@@ -21,10 +26,10 @@ do
         echo "----- Failure -----"
         echo "--> failed at "$as
         echo $diffout
+        do_clean
         exit 1
     fi
 done
 
 echo "----- All Pass -----"
-
-rm -rf nnrv.vcd result.log test.out ram.mem test.bin a.out
+do_clean

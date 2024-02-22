@@ -4,7 +4,8 @@ module nnrv_top
 # (
 parameter INSTR_WIDTH = 32,
 parameter ADDR_WIDTH = 8,
-parameter XLEN = 32
+parameter XLEN = 64,
+parameter MASK_WIDTH = 8
 )
 (
 input wire i_clk,
@@ -16,16 +17,16 @@ output wire o_led
 
 wire [XLEN-1:0] ram_rd1_addr;
 wire ram_rd1_en;
-wire [3:0] ram_rd1_mask;
-wire [INSTR_WIDTH-1:0] ram_rd1_data;
+wire [MASK_WIDTH-1:0] ram_rd1_mask;
+wire [XLEN-1:0] ram_rd1_data;
 wire [XLEN-1:0] ram_rd2_addr;
 wire ram_rd2_en;
-wire [3:0] ram_rd2_mask;
-wire [INSTR_WIDTH-1:0] ram_rd2_data;
+wire [MASK_WIDTH-1:0] ram_rd2_mask;
+wire [XLEN-1:0] ram_rd2_data;
 wire [XLEN-1:0] ram_wr_addr;
 wire ram_wr_en;
-wire [3:0] ram_wr_mask;
-wire [INSTR_WIDTH-1:0] ram_wr_data;
+wire [MASK_WIDTH-1:0] ram_wr_mask;
+wire [XLEN-1:0] ram_wr_data;
 
 wire [INSTR_WIDTH-1:0] if_instr;
 wire [XLEN-1:0] if_cur_pc;
@@ -44,7 +45,7 @@ wire [XLEN-1:0] id_exec_op2;
 wire [3:0] id_exec_type;
 wire [4:0] id_exec_rd;
 wire id_exec_rd_en;
-wire [3:0] id_exec_ram_mask;
+wire [MASK_WIDTH-1:0] id_exec_ram_mask;
 wire id_exec_sign;
 wire [XLEN-1:0] i_id_pc;
 
@@ -55,7 +56,7 @@ wire exec_mem_ram_wr_en;
 wire exec_mem_ram_rd_en;
 wire [XLEN-1:0] exec_mem_ram_addr;
 wire [XLEN-1:0] exec_mem_ram_data;
-wire [3:0] exec_mem_ram_mask;
+wire [MASK_WIDTH-1:0] exec_mem_ram_mask;
 wire exec_mem_sign;
 wire exec_id_hazard_stall;
 wire exec_id_rd_en;

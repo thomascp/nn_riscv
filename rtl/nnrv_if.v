@@ -2,8 +2,10 @@
 
 module nnrv_if
 # (
+parameter DATA_WIDTH = 64,
 parameter INSTR_WIDTH = 32,
-parameter XLEN = 32
+parameter MASK_WIDTH = DATA_WIDTH >> 3,
+parameter XLEN = 64
 )
 (
 input wire i_clk,
@@ -11,8 +13,8 @@ input wire i_rst,
 
 output wire [XLEN-1:0] o_ram_rd_addr,
 output reg o_ram_rd_en,
-output reg [3:0] o_ram_rd_mask,
-input wire [INSTR_WIDTH-1:0] i_ram_rd_data,
+output reg [MASK_WIDTH-1:0] o_ram_rd_mask,
+input wire [DATA_WIDTH-1:0] i_ram_rd_data,
 
 output wire [INSTR_WIDTH-1:0] o_id_instr,
 output wire [XLEN-1:0] o_id_cur_pc,
@@ -36,7 +38,7 @@ assign o_id_cur_pc = cur_pc;
 
 initial begin
     o_ram_rd_en = 1'b1;
-    o_ram_rd_mask = 4'b1111;
+    o_ram_rd_mask = 8'b11111111;
 end
 
 always @ (posedge i_clk or posedge i_rst) begin
@@ -56,13 +58,19 @@ always @ (posedge i_clk or posedge i_rst) begin
         instr <= {XLEN{1'b0}};
         cur_pc <= {XLEN{1'b0}};
     end else if (i_id_jmp_stall) begin
-        instr <= i_ram_rd_data;
+        instr <= (i_id_jmp_pc[2:0] == 3'b000) ?
+            i_ram_rd_data[DATA_WIDTH >> 1 - 1 : 0] :
+            i_ram_rd_data[DATA_WIDTH - 1 : DATA_WIDTH >> 1];
         cur_pc <= i_id_jmp_pc;
     end else if (i_id_hazard_stall) begin
-        instr <= i_ram_rd_data;
+        instr <= (cur_pc[2:0] == 3'b000) ?
+            i_ram_rd_data[DATA_WIDTH >> 1 - 1 : 0] :
+            i_ram_rd_data[DATA_WIDTH - 1 : DATA_WIDTH >> 1];
         cur_pc <= cur_pc;
     end else begin
-        instr <= i_ram_rd_data;
+        instr <= (pc[2:0] == 3'b000) ?
+            i_ram_rd_data[DATA_WIDTH >> 1 - 1 : 0] :
+            i_ram_rd_data[DATA_WIDTH - 1 : DATA_WIDTH >> 1];
         cur_pc <= pc;
     end
 end
