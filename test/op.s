@@ -35,4 +35,4 @@ _boot:                    /* x0  = 0    0x000 */
     nop
     nop
 loop:
-	jal x0, loop
+    jal x0, loop

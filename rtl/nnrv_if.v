@@ -53,36 +53,36 @@ assign o_id_instr = instr;
 assign o_id_cur_pc = cur_pc;
 
 initial begin
-	o_ram_rd_en = 1'b1;
-	o_ram_rd_mask = 4'b1111;
+    o_ram_rd_en = 1'b1;
+    o_ram_rd_mask = 4'b1111;
 end
 
 always @ (posedge i_clk or posedge i_rst) begin
-	if (i_rst) begin
-		pc <= {XLEN{1'b0}};
-	end else if (i_id_jmp_stall) begin
-		pc <= i_id_jmp_pc + 4;
-	end else if (i_id_hazard_stall) begin
-	    pc <= pc;
-	end else begin
-		pc <= pc + 4;
-	end
+    if (i_rst) begin
+        pc <= {XLEN{1'b0}};
+    end else if (i_id_jmp_stall) begin
+        pc <= i_id_jmp_pc + 4;
+    end else if (i_id_hazard_stall) begin
+        pc <= pc;
+    end else begin
+        pc <= pc + 4;
+    end
 end
 
 always @ (posedge i_clk or posedge i_rst) begin
-	if (i_rst) begin
-		instr <= {XLEN{1'b0}};
-		cur_pc <= {XLEN{1'b0}};
-	end else if (i_id_jmp_stall) begin
-	    instr <= i_ram_rd_data;
-		cur_pc <= i_id_jmp_pc;
-	end else if (i_id_hazard_stall) begin
-	    instr <= i_ram_rd_data;
-		cur_pc <= cur_pc;
-	end else begin
-		instr <= i_ram_rd_data;
-		cur_pc <= pc;
-	end
+    if (i_rst) begin
+        instr <= {XLEN{1'b0}};
+        cur_pc <= {XLEN{1'b0}};
+    end else if (i_id_jmp_stall) begin
+        instr <= i_ram_rd_data;
+        cur_pc <= i_id_jmp_pc;
+    end else if (i_id_hazard_stall) begin
+        instr <= i_ram_rd_data;
+        cur_pc <= cur_pc;
+    end else begin
+        instr <= i_ram_rd_data;
+        cur_pc <= pc;
+    end
 end
 
 endmodule

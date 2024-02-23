@@ -40,4 +40,4 @@ start:
     nop
 
 test:
-	.word 0xffffffff
+    .word 0xffffffff

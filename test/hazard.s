@@ -17,9 +17,9 @@ _boot:                    /* x0  = 0    0x000 */
     nop
     nop
 loop:
-	jal x0, loop
+    jal x0, loop
 
 test1:
-	.word 0xaaaaaaaa
+    .word 0xaaaaaaaa
 test2:
-	.word 0x55555555
+    .word 0x55555555

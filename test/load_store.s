@@ -42,12 +42,12 @@ _boot:                    /* x0  = 0    0x000 */
     nop
     nop
 loop:
-	jal x0, loop
+    jal x0, loop
 
 read_v:
-	.word 0x1234abcd
+    .word 0x1234abcd
     .word 0x87658321
-	.word 0xabcdef12
+    .word 0xabcdef12
 write_v:
     .word 0x55555555
     .word 0x55555555
