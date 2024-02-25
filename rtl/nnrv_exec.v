@@ -55,7 +55,7 @@ reg mem_ram_wr_en;
 reg mem_ram_rd_en;
 reg [XLEN-1:0] mem_ram_addr;
 reg [XLEN-1:0] mem_ram_data;
-reg [3:0] mem_ram_mask;
+reg [MASK_WIDTH-1:0] mem_ram_mask;
 reg mem_sign;
 
 reg rd_ready = 1'b0;
@@ -87,7 +87,7 @@ assign o_id_rd = rd;
 assign o_id_rd_reg = rd_reg_wd;
 
 always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i++) begin
+  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
     ram_full_mask[i * 8 +: 8] = i_id_ram_mask[i] ? 8'hFF : 8'h00;
   end
 end

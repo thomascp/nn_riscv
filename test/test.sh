@@ -10,7 +10,7 @@ do
     target=$(echo $as | sed "s/\.s//g")
     riscv64-unknown-elf-gcc -march=rv64g -Ttest.lds -nostartfiles -nostdlib $as -o test.out
     riscv64-unknown-elf-objcopy -O binary test.out test.bin
-    hexdump -ve '1/4 "%08x\n"' test.bin > ram.mem
+    hexdump -ve '1/8 "%016x\n"' test.bin > ram.mem
 
     vvp ../nnrv
     if [ ! -f $target".gt" ]

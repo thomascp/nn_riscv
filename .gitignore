@@ -1,4 +1,11 @@
 *.code-workspace
 *.vcd
+*.cache
+*.hw
+*.sim
+*ip_user_files
+*.xpr
+*.wcfg
+*backup
 
 nnrv

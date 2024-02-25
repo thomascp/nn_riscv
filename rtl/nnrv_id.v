@@ -138,7 +138,7 @@ reg [3:0] exec_type = 4'b0;
 reg exec_rd_en = 1'b0;
 reg [4:0] exec_rd = 5'b0;
 reg [XLEN-1:0] exec_pc = {XLEN{1'b0}};
-reg [MASK_WIDTH-1:0] exec_ram_mask = 4'b0000;
+reg [MASK_WIDTH-1:0] exec_ram_mask = 8'b00000000;
 reg exec_sign = 1'b0;
 
 reg reg_r1_en = 1'b1;
@@ -177,9 +177,11 @@ assign j_imm = {{44{imm_sign}}, imm_19_12, imm_20, imm_30_25, imm_24_21, 1'b0};
 assign shamt_6 = id_instr[25:20];
 assign shamt_5 = id_instr[24:20];
 
-assign rs1_valid = (opcode == `JALR) || (opcode == `BRANCH) || (opcode == `LOAD)
-                        || (opcode == `STORE) || (opcode == `OP) || (opcode == `OP_IMM);
-assign rs2_valid = (opcode == `BRANCH) || (opcode == `STORE) || (opcode == `OP);
+assign rs1_valid = (opcode == `JALR) || (opcode == `BRANCH) || (opcode == `LOAD) ||
+                   (opcode == `STORE) || (opcode == `OP) || (opcode == `OP_IMM) ||
+                   (opcode == `OP_32) || (opcode == `OP_IMM_32);
+assign rs2_valid = (opcode == `BRANCH) || (opcode == `STORE) || (opcode == `OP) ||
+                   (opcode == `OP_32);
 
 assign o_if_jmp_stall = jmp_stall;
 assign o_if_jmp_pc = jmp_pc;

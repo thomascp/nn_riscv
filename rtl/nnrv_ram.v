@@ -37,28 +37,28 @@ reg [DATA_WIDTH-1:0] rd2_mask;
 wire [ADDR_WIDTH-1:0] wr_addr;
 reg [DATA_WIDTH-1:0] wr_mask;
 
-assign rd1_addr = {2'h0, i_rd1_addr[ADDR_WIDTH-1:2]};
+assign rd1_addr = {3'h0, i_rd1_addr[ADDR_WIDTH-1:3]};
 assign o_rd1_data = (i_rd1_en) ? (ram[rd1_addr] & rd1_mask) : 8'b0;
 
 always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i++) begin
+  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
     rd1_mask[i * 8 +: 8] = i_rd1_mask[i] ? 8'hFF : 8'h00;
   end
 end
 
-assign rd2_addr = {2'h0, i_rd2_addr[ADDR_WIDTH-1:2]};
+assign rd2_addr = {3'h0, i_rd2_addr[ADDR_WIDTH-1:3]};
 assign o_rd2_data = (i_rd2_en) ? (ram[rd2_addr] & rd2_mask) : 8'b0;
 
 always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i++) begin
+  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
     rd2_mask[i * 8 +: 8] = i_rd2_mask[i] ? 8'hFF : 8'h00;
   end
 end
 
-assign wr_addr = {2'h0, i_wr_addr[ADDR_WIDTH-1:2]};
+assign wr_addr = {3'h0, i_wr_addr[ADDR_WIDTH-1:3]};
 
 always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i++) begin
+  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
     wr_mask[i * 8 +: 8] = i_wr_mask[i] ? 8'hFF : 8'h00;
   end
 end
