@@ -22,12 +22,17 @@ initial begin
   #3000;
 
   file = $fopen ("result.log", "w");
+  $fwrite(file, "regs :\n");
   for (reg_idx = 0; reg_idx < 32; reg_idx = reg_idx + 1) begin
     if ((reg_idx % 8) == 0)
     begin
       $fwrite(file, "\n");
     end
     $fwrite(file, "x%02d [%08x] ", reg_idx, nnrv_top.nnrv_reg.regs[reg_idx]);
+  end
+  $fwrite(file, "\n\nram :\n\n");
+  for (reg_idx = 0; reg_idx < 32; reg_idx = reg_idx + 1) begin
+    $fwrite(file, "0x%08x [%08x]\n", reg_idx * 8, nnrv_top.ram.ram[reg_idx]);
   end
   $fclose(file);
   #100 $finish;

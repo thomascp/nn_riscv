@@ -26,7 +26,7 @@ do
         echo "----- Failure -----"
         echo "--> failed at "$as
         echo $diffout
-        do_clean
+        #do_clean
         exit 1
     fi
 done
