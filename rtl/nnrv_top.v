@@ -3,7 +3,7 @@
 module nnrv_top
 # (
 parameter INSTR_WIDTH = 32,
-parameter ADDR_WIDTH = 8,
+parameter ADDR_WIDTH = 10,
 parameter XLEN = 64,
 parameter MASK_WIDTH = 8
 )

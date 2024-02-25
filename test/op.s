@@ -5,7 +5,7 @@ _boot:                    /* x0  = 0    0x000 */
     addi x1, x0, 0x55
     addi x2, x0, 0xaa
     addi x3, x0, -1
-    addi x4, x0, 24
+    addi x4, x0, 56
     nop
     nop
     nop

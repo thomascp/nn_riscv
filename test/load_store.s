@@ -24,6 +24,8 @@ _boot:                    /* x0  = 0    0x000 */
     lhu x13, 5(x31)
     lh x14, 5(x31)
     lw x15, 8(x31)
+    lwu x16, 8(x31)
+    ld x17, 16(x31)
     nop
     nop
     nop
@@ -32,7 +34,7 @@ _boot:                    /* x0  = 0    0x000 */
     sb x2, 0(x30)
     sh x9, 4(x30)
     sw x15, 8(x30)
-    nop
+    sd x17, 16(x30)
     nop
     nop
     nop
@@ -48,7 +50,13 @@ read_v:
     .word 0x1234abcd
     .word 0x87658321
     .word 0xabcdef12
+    .word 0xdeadbeef
+    .dword 0x1234567887654321
+    .dword 0x1122334455667788
 write_v:
     .word 0x55555555
     .word 0x55555555
     .word 0x55555555
+    .word 0xdeadbeef
+    .dword 0x5555555555555555
+    .dword 0x5555555555555555

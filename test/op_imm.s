@@ -17,14 +17,14 @@ _boot:                    /* x0  = 0    0x000 */
     xori x9, x1, 0x11
     ori x10, x1, 0x11
     andi x11, x1, 0x11
-    slli x12, x2, 24
+    slli x12, x2, 56
     nop
     nop
     nop
     nop
     nop
-    srli x13, x12, 24
-    srai x14, x12, 24
+    srli x13, x12, 56
+    srai x14, x12, 56
     nop
     nop
     nop
