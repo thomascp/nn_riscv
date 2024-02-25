@@ -8,5 +8,7 @@
 *.wcfg
 *backup
 *.git*
+*.runs
+*.srcs
 
 nnrv

@@ -47,7 +47,7 @@ reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 
-reg [XLEN-1:0] ram_full_mask;
+wire [XLEN-1:0] ram_full_mask;
 wire [2:0] op2_shift;
 wire [5:0] op2_full_shift;
 
@@ -86,11 +86,8 @@ assign o_id_rd_ready = rd_ready;
 assign o_id_rd = rd;
 assign o_id_rd_reg = rd_reg_wd;
 
-always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
-    ram_full_mask[i * 8 +: 8] = i_id_ram_mask[i] ? 8'hFF : 8'h00;
-  end
-end
+assign ram_full_mask = {{8{i_id_ram_mask[7]}}, {8{i_id_ram_mask[6]}}, {8{i_id_ram_mask[5]}}, {8{i_id_ram_mask[4]}},
+                        {8{i_id_ram_mask[3]}}, {8{i_id_ram_mask[2]}}, {8{i_id_ram_mask[1]}}, {8{i_id_ram_mask[0]}}};
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin

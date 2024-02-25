@@ -234,6 +234,7 @@ always @ (posedge i_clk or posedge i_rst) begin
         jmp_pc <= 0;
         exec_ram_mask <= 0;
         exec_sign <= 0;
+        op_32bit <= 0;
     end else if (hazard_stall) begin
         exec_rd <= 5'b0;
         exec_op1 <= {XLEN{1'b0}};
@@ -245,6 +246,7 @@ always @ (posedge i_clk or posedge i_rst) begin
         jmp_pc <= 0;
         exec_ram_mask <= 0;
         exec_sign <= 0;
+        op_32bit <= 0;
     end else begin
         exec_rd <= rd_idx;
         exec_pc <= i_if_pc;
@@ -332,6 +334,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     exec_op2 <= u_imm;
                     exec_type <= `OP_ADD;
                     exec_rd_en <= 1'b1;
+                    op_32bit <= 0;
                     end
         `AUIPC    : begin
                     jmp_stall <= 1'b0;
@@ -339,6 +342,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     exec_op2 <= u_imm;
                     exec_type <= `OP_ADD;
                     exec_rd_en <= 1'b1;
+                    op_32bit <= 0;
                     end
         `OP       : begin
                     jmp_stall <= 1'b0;
@@ -436,16 +440,19 @@ always @ (posedge i_clk or posedge i_rst) begin
                     jmp_pc <= j_imm + i_if_pc;
                     exec_type <= `OP_JMP;
                     exec_rd_en <= 1'b1;
+                    op_32bit <= 0;
                     end
         `JALR     : begin
                     jmp_stall <= 1'b1;
                     jmp_pc <= j_imm + r1_reg;
                     exec_type <= `OP_JMP;
                     exec_rd_en <= 1'b1;
+                    op_32bit <= 0;
                     end
         `BRANCH   : begin
                     exec_type <= `OP_NOP;
                     exec_rd_en <= 1'b0;
+                    op_32bit <= 0;
                     case(funct3)
                     `F3_BEQ:    begin
                                 jmp_stall <= (r1_reg == r2_reg);
@@ -483,6 +490,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     exec_rd <= rd_idx;
                     exec_rd_en <= 1'b1;
                     exec_op2 <= r1_reg + i_imm;
+                    op_32bit <= 0;
                     case(funct3)
                     `F3_LB:     begin
                                 exec_ram_mask <= 8'b00000001;
@@ -525,6 +533,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     exec_op1 <= r2_reg;
                     exec_op2 <= r1_reg + s_imm;
                     exec_sign <= 1'b0;
+                    op_32bit <= 0;
                     case(funct3)
                     `F3_SB:     begin
                                 exec_ram_mask <= 8'b00000001;
@@ -547,6 +556,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     jmp_stall <= 1'b0;
                     exec_type <= `OP_NOP;
                     exec_rd_en <= 1'b0;
+                    op_32bit <= 0;
                     end
         endcase
     end

@@ -17,7 +17,7 @@ do
     then
         echo "----- Failure -----"
         echo $target".gt doesn't exist"
-        #do_clean
+        do_clean
         exit 1
     fi
     diffout=$(diff -w result.log $target".gt")
@@ -26,7 +26,7 @@ do
         echo "----- Failure -----"
         echo "--> failed at "$as
         echo $diffout
-        #do_clean
+        do_clean
         exit 1
     fi
 done

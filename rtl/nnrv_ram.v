@@ -31,37 +31,28 @@ input wire [DATA_WIDTH-1:0] i_wr_data
 reg [DATA_WIDTH-1:0] ram [0:RAM_DEPTH-1];
 
 wire [ADDR_WIDTH-1:0] rd1_addr;
-reg [DATA_WIDTH-1:0] rd1_mask;
+wire [DATA_WIDTH-1:0] rd1_mask;
 wire [ADDR_WIDTH-1:0] rd2_addr;
-reg [DATA_WIDTH-1:0] rd2_mask;
+wire [DATA_WIDTH-1:0] rd2_mask;
 wire [ADDR_WIDTH-1:0] wr_addr;
-reg [DATA_WIDTH-1:0] wr_mask;
+wire [DATA_WIDTH-1:0] wr_mask;
 
 assign rd1_addr = {3'h0, i_rd1_addr[ADDR_WIDTH-1:3]};
 assign o_rd1_data = (i_rd1_en) ? (ram[rd1_addr] & rd1_mask) : 8'b0;
 
-always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
-    rd1_mask[i * 8 +: 8] = i_rd1_mask[i] ? 8'hFF : 8'h00;
-  end
-end
+assign rd1_mask = {{8{i_rd1_mask[7]}}, {8{i_rd1_mask[6]}}, {8{i_rd1_mask[5]}}, {8{i_rd1_mask[4]}},
+                   {8{i_rd1_mask[3]}}, {8{i_rd1_mask[2]}}, {8{i_rd1_mask[1]}}, {8{i_rd1_mask[0]}}};
 
 assign rd2_addr = {3'h0, i_rd2_addr[ADDR_WIDTH-1:3]};
 assign o_rd2_data = (i_rd2_en) ? (ram[rd2_addr] & rd2_mask) : 8'b0;
 
-always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
-    rd2_mask[i * 8 +: 8] = i_rd2_mask[i] ? 8'hFF : 8'h00;
-  end
-end
+assign rd2_mask = {{8{i_rd2_mask[7]}}, {8{i_rd2_mask[6]}}, {8{i_rd2_mask[5]}}, {8{i_rd2_mask[4]}},
+                   {8{i_rd2_mask[3]}}, {8{i_rd2_mask[2]}}, {8{i_rd2_mask[1]}}, {8{i_rd2_mask[0]}}};
 
 assign wr_addr = {3'h0, i_wr_addr[ADDR_WIDTH-1:3]};
 
-always @* begin
-  for (integer i = 0; i < MASK_WIDTH; i=i+1) begin
-    wr_mask[i * 8 +: 8] = i_wr_mask[i] ? 8'hFF : 8'h00;
-  end
-end
+assign wr_mask = {{8{i_wr_mask[7]}}, {8{i_wr_mask[6]}}, {8{i_wr_mask[5]}}, {8{i_wr_mask[4]}},
+                  {8{i_wr_mask[3]}}, {8{i_wr_mask[2]}}, {8{i_wr_mask[1]}}, {8{i_wr_mask[0]}}};
 
 always @ (posedge i_clk) begin
   if (i_wr_en) begin
