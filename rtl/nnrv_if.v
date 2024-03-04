@@ -59,18 +59,18 @@ always @ (posedge i_clk or posedge i_rst) begin
         cur_pc <= {XLEN{1'b0}};
     end else if (i_id_jmp_stall) begin
         instr <= (i_id_jmp_pc[2:0] == 3'b000) ?
-            i_ram_rd_data[(DATA_WIDTH >> 1) - 1 : 0] :
-            i_ram_rd_data[DATA_WIDTH - 1 : DATA_WIDTH >> 1];
+            i_ram_rd_data[31 : 0] :
+            i_ram_rd_data[63 : 32];
         cur_pc <= i_id_jmp_pc;
     end else if (i_id_hazard_stall) begin
         instr <= (cur_pc[2:0] == 3'b000) ?
-            i_ram_rd_data[(DATA_WIDTH >> 1) - 1 : 0] :
-            i_ram_rd_data[DATA_WIDTH - 1 : DATA_WIDTH >> 1];
+            i_ram_rd_data[31 : 0] :
+            i_ram_rd_data[63 : 32];
         cur_pc <= cur_pc;
     end else begin
         instr <= (pc[2:0] == 3'b000) ?
-            i_ram_rd_data[(DATA_WIDTH >> 1) - 1 : 0] :
-            i_ram_rd_data[DATA_WIDTH - 1 : DATA_WIDTH >> 1];
+            i_ram_rd_data[31 : 0] :
+            i_ram_rd_data[63 : 32];
         cur_pc <= pc;
     end
 end

@@ -47,16 +47,10 @@ output wire [XLEN-1:0] o_wb_rd_reg
 reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
-reg [XLEN-1:0] rd_reg_exec = {XLEN{1'b0}};
-reg [XLEN-1:0] rd_reg_nosign = {XLEN{1'b0}};
-
-reg [5:0] mask_bits = 0;
-reg [5:0] right_shift = 0;
 
 reg rd_ready = 1'b0;
 
 reg ram_rd_en = 1'b0;
-reg sign = 1'b0;
 
 assign o_wb_rd_en = rd_en;
 assign o_wb_rd = rd;
@@ -76,78 +70,148 @@ assign o_id_rd_ready = rd_ready;
 assign o_id_rd = rd;
 assign o_id_rd_reg = rd_reg;
 
-always @ * begin
-    if (o_ram_rd_mask[0] == 1'b1) begin
-        right_shift = 0;
-    end else if (o_ram_rd_mask[1:0] == 2'b10) begin
-        right_shift = 8;
-    end else if (o_ram_rd_mask[2:0] == 3'b100) begin
-        right_shift = 16;
-    end else if (o_ram_rd_mask[3:0] == 4'b1000) begin
-        right_shift = 24;
-    end else if (o_ram_rd_mask[4:0] == 5'b10000) begin
-        right_shift = 32;
-    end else if (o_ram_rd_mask[5:0] == 6'b100000) begin
-        right_shift = 40;
-    end else if (o_ram_rd_mask[6:0] == 7'b1000000) begin
-        right_shift = 48;
-    end else if (o_ram_rd_mask[7:0] == 8'b10000000) begin
-        right_shift = 56;
-    end else begin
-        right_shift = 0;
-    end
-end
-
-always @ * begin
-    rd_reg = {XLEN{1'b0}};
-    if (ram_rd_en) begin
-        if (sign) begin
-            case (mask_bits)
-                8:  rd_reg = {{56{rd_reg_nosign[7]}}, rd_reg_nosign[7:0]};
-                16: rd_reg = {{48{rd_reg_nosign[15]}}, rd_reg_nosign[15:0]};
-                32: rd_reg = {{32{rd_reg_nosign[31]}}, rd_reg_nosign[31:0]};
-                default: rd_reg = rd_reg_nosign;
-            endcase
-        end else begin
-            rd_reg = rd_reg_nosign;
-        end
-    end else begin
-        rd_reg = rd_reg_exec;
-    end
-end
-
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
         rd_en <= 1'b0;
         rd <= 5'b0;
-        rd_reg_exec <= {XLEN{1'b0}};
+        rd_reg <= 0;
         rd_ready <= 1'b0;
         ram_rd_en <= 1'b0;
-        sign <= 1'b0;
-        mask_bits <= 0;
-        rd_reg_nosign <= 0;
     end else begin
         rd_en <= i_exec_rd_en;
         rd <= i_exec_rd;
         ram_rd_en <= i_exec_ram_rd_en;
-        sign <= i_exec_sign;
         if (i_exec_ram_rd_en) begin
             case(i_exec_ram_mask)
-                8'b00000001, 8'b00000010, 8'b00000100, 8'b00001000,
-                8'b00010000, 8'b00100000, 8'b01000000, 8'b10000000 : mask_bits <= 8;
-                8'b00000011, 8'b00000110, 8'b00001100, 8'b00011000,
-                8'b00110000, 8'b01100000, 8'b11000000              : mask_bits <= 16;
-                8'b00001111, 8'b00011110, 8'b00111100, 8'b01111000,
-                8'b11110000                                        : mask_bits <= 32;
-                default : mask_bits <= 64;
+                8'b00000001:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[7]}}, i_ram_rd_data[7:0]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[7:0]};
+                        end
+                8'b00000010:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[15]}}, i_ram_rd_data[15:8]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[15:8]};
+                        end
+                8'b00000100:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[23]}}, i_ram_rd_data[23:16]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[23:16]};
+                        end
+                8'b00001000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[31]}}, i_ram_rd_data[31:24]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[31:24]};
+                        end
+                8'b00010000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[39]}}, i_ram_rd_data[39:32]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[39:32]};
+                        end
+                8'b00100000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[47]}}, i_ram_rd_data[47:40]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[47:40]};
+                        end
+                8'b01000000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[55]}}, i_ram_rd_data[55:48]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[55:48]};
+                        end
+                8'b10000000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{56{i_ram_rd_data[63]}}, i_ram_rd_data[63:56]};
+                        end else begin
+                            rd_reg <= {56'b0, i_ram_rd_data[63:56]};
+                        end
+                8'b00000011:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[15]}}, i_ram_rd_data[15:0]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[15:0]};
+                        end
+                8'b00000110:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[23]}}, i_ram_rd_data[23:8]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[23:8]};
+                        end
+                8'b00001100:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[31]}}, i_ram_rd_data[31:16]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[31:16]};
+                        end
+                8'b00011000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[39]}}, i_ram_rd_data[39:24]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[39:24]};
+                        end
+                8'b00110000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[47]}}, i_ram_rd_data[47:32]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[47:32]};
+                        end
+                8'b01100000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[55]}}, i_ram_rd_data[55:40]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[55:40]};
+                        end
+                8'b11000000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{48{i_ram_rd_data[63]}}, i_ram_rd_data[63:48]};
+                        end else begin
+                            rd_reg <= {48'b0, i_ram_rd_data[63:48]};
+                        end
+                8'b00001111:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{32{i_ram_rd_data[31]}}, i_ram_rd_data[31:0]};
+                        end else begin
+                            rd_reg <= {32'b0, i_ram_rd_data[31:0]};
+                        end
+                8'b00011110:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{32{i_ram_rd_data[39]}}, i_ram_rd_data[39:8]};
+                        end else begin
+                            rd_reg <= {32'b0, i_ram_rd_data[39:8]};
+                        end
+                8'b00111100:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{32{i_ram_rd_data[47]}}, i_ram_rd_data[47:16]};
+                        end else begin
+                            rd_reg <= {32'b0, i_ram_rd_data[47:16]};
+                        end
+                8'b01111000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{32{i_ram_rd_data[55]}}, i_ram_rd_data[55:24]};
+                        end else begin
+                            rd_reg <= {32'b0, i_ram_rd_data[55:24]};
+                        end
+                8'b11110000:
+                        if (i_exec_sign) begin
+                            rd_reg <= {{32{i_ram_rd_data[63]}}, i_ram_rd_data[63:32]};
+                        end else begin
+                            rd_reg <= {32'b0, i_ram_rd_data[63:32]};
+                        end
+                8'b11111111:
+                        rd_reg <= i_ram_rd_data;
+                default:
+                        rd_reg <= i_ram_rd_data;
             endcase
-            rd_reg_nosign <= (i_ram_rd_data >> right_shift);
             rd_ready <= 1'b1;
         end else begin
-            rd_reg_exec <= i_exec_rd_reg;
+            rd_reg <= i_exec_rd_reg;
             rd_ready <= 1'b1;
-            mask_bits <= 0;
-            rd_reg_nosign <= 0;
         end
     end
 end
