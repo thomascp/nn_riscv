@@ -77,7 +77,7 @@ wire wb_reg_rd_en;
 wire [4:0] wb_reg_rd;
 wire [XLEN-1:0] wb_reg_rd_reg;
 
-assign o_led = ram.ram[20][28];
+assign o_led = ram.ram[20][25];
 
 ram ram (
     .i_clk(i_clk),

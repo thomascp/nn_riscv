@@ -152,7 +152,7 @@ reg op_32bit = 1'b0;
 wire [XLEN-1:0] r1_reg;
 wire [XLEN-1:0] r2_reg;
 
-assign id_instr = (jmp_stall) ? `OP_INSTR_NOP : i_if_instr;
+assign id_instr = i_if_instr;
 
 assign opcode = id_instr[6:0];
 assign rd_idx = id_instr[11:7];
@@ -236,6 +236,18 @@ always @ (posedge i_clk or posedge i_rst) begin
         exec_sign <= 0;
         op_32bit <= 0;
     end else if (hazard_stall) begin
+        exec_rd <= 5'b0;
+        exec_op1 <= {XLEN{1'b0}};
+        exec_op2 <= {XLEN{1'b0}};
+        exec_type <= `OP_NOP;
+        jmp_stall <= 1'b0;
+        exec_rd_en <= 1'b0;
+        exec_pc <= 0;
+        jmp_pc <= 0;
+        exec_ram_mask <= 0;
+        exec_sign <= 0;
+        op_32bit <= 0;
+    end else if (jmp_stall) begin
         exec_rd <= 5'b0;
         exec_op1 <= {XLEN{1'b0}};
         exec_op2 <= {XLEN{1'b0}};
