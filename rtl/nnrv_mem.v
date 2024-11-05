@@ -16,6 +16,7 @@ output wire [XLEN-1:0] o_id_rd_reg,
 
 input wire i_exec_rd_en,
 input wire [4:0] i_exec_rd,
+input wire i_exec_rd_ready,
 input wire [XLEN-1:0] i_exec_rd_reg,
 
 input wire i_exec_ram_wr_en,
@@ -46,9 +47,8 @@ output wire [XLEN-1:0] o_wb_rd_reg
 
 reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
-reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
-
 reg rd_ready = 1'b0;
+reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 
 reg ram_rd_en = 1'b0;
 
@@ -211,7 +211,7 @@ always @ (posedge i_clk or posedge i_rst) begin
             rd_ready <= 1'b1;
         end else begin
             rd_reg <= i_exec_rd_reg;
-            rd_ready <= 1'b1;
+            rd_ready <= i_exec_rd_ready;
         end
     end
 end

@@ -45,6 +45,8 @@ wire [XLEN-1:0] id_exec_op2;
 wire [3:0] id_exec_type;
 wire [4:0] id_exec_rd;
 wire id_exec_rd_en;
+wire id_exec_rd_ready;
+wire [XLEN-1:0] id_exec_rd_reg;
 wire [MASK_WIDTH-1:0] id_exec_ram_mask;
 wire id_exec_sign;
 wire id_exec_op_32bit;
@@ -52,6 +54,7 @@ wire [XLEN-1:0] i_id_pc;
 
 wire exec_mem_rd_en;
 wire [4:0] exec_mem_rd;
+wire exec_mem_rd_ready;
 wire [XLEN-1:0] exec_mem_rd_reg;
 wire exec_mem_ram_wr_en;
 wire exec_mem_ram_rd_en;
@@ -137,6 +140,8 @@ nnrv_id nnrv_id (
     .o_exec_type(id_exec_type),
     .o_exec_rd_en(id_exec_rd_en),
     .o_exec_rd(id_exec_rd),
+    .o_exec_rd_ready(id_exec_rd_ready),
+    .o_exec_rd_reg(id_exec_rd_reg),
     .o_exec_ram_mask(id_exec_ram_mask),
     .o_exec_sign(id_exec_sign),
     .o_exec_op_32bit(id_exec_op_32bit),
@@ -167,6 +172,8 @@ nnrv_exec nnrv_exec (
     .i_id_op_32bit(id_exec_op_32bit),
     .i_id_rd(id_exec_rd),
     .i_id_rd_en(id_exec_rd_en),
+    .i_id_rd_ready(id_exec_rd_ready),
+    .i_id_rd_reg(id_exec_rd_reg),
     .i_id_pc(i_id_pc),
     .o_id_rd_en(exec_id_rd_en),
     .o_id_rd_ready(exec_id_rd_ready),
@@ -174,6 +181,7 @@ nnrv_exec nnrv_exec (
     .o_id_rd_reg(exec_id_rd_reg),
     .o_mem_rd_en(exec_mem_rd_en),
     .o_mem_rd(exec_mem_rd),
+    .o_mem_rd_ready(exec_mem_rd_ready),
     .o_mem_rd_reg(exec_mem_rd_reg),
     .o_mem_ram_wr_en(exec_mem_ram_wr_en),
     .o_mem_ram_rd_en(exec_mem_ram_rd_en),
@@ -192,6 +200,7 @@ nnrv_mem nnrv_mem (
     .o_id_rd_reg(mem_id_rd_reg),
     .i_exec_rd_en(exec_mem_rd_en),
     .i_exec_rd(exec_mem_rd),
+    .i_exec_rd_ready(exec_mem_rd_ready),
     .i_exec_rd_reg(exec_mem_rd_reg),
     .i_exec_ram_wr_en(exec_mem_ram_wr_en),
     .i_exec_ram_rd_en(exec_mem_ram_rd_en),

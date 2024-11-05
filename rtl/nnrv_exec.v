@@ -18,6 +18,8 @@ input wire i_id_op_32bit,
 
 input wire [4:0] i_id_rd,
 input wire i_id_rd_en,
+input wire i_id_rd_ready,
+input wire [XLEN-1:0] i_id_rd_reg,
 input wire [XLEN-1:0] i_id_pc,
 
 output wire o_id_rd_en,
@@ -27,6 +29,7 @@ output wire [XLEN-1:0] o_id_rd_reg,
 
 output wire o_mem_rd_en,
 output wire [4:0] o_mem_rd,
+output wire o_mem_rd_ready,
 output wire [XLEN-1:0] o_mem_rd_reg,
 
 output wire o_mem_ram_wr_en,
@@ -45,6 +48,7 @@ output wire o_mem_sign
 
 reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
+reg rd_ready = 1'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 
 wire [XLEN-1:0] ram_full_mask;
@@ -58,8 +62,6 @@ reg [XLEN-1:0] mem_ram_data;
 reg [MASK_WIDTH-1:0] mem_ram_mask;
 reg mem_sign;
 
-reg rd_ready = 1'b0;
-
 reg op_32bit = 1'b0;
 wire [XLEN-1:0] rd_reg_wd;
 
@@ -69,6 +71,7 @@ assign rd_reg_wd = (op_32bit) ? {{32{rd_reg[31]}}, rd_reg[31:0]} : rd_reg;
 
 assign o_mem_rd_en = rd_en;
 assign o_mem_rd = rd;
+assign o_mem_rd_ready = rd_ready;
 assign o_mem_rd_reg = rd_reg_wd;
 
 assign op2_shift = i_id_op2[2:0];
@@ -147,17 +150,14 @@ always @ (posedge i_clk or posedge i_rst) begin
                    rd_reg <= $signed(i_id_op1) >>> i_id_op2;
                    rd_ready <= 1'b1;
                    end
-        `OP_JMP  : begin
-                   rd_reg <= i_id_pc + 4;
-                   rd_ready <= 1'b1;
-                   end
         `OP_LOAD : begin
                    mem_ram_rd_en <= 1'b1;
                    mem_ram_wr_en <= 1'b0;
                    mem_ram_addr <= i_id_op2;
                    mem_ram_mask <= i_id_ram_mask << op2_shift;
                    mem_sign <= i_id_sign;
-                   rd_ready <= 1'b0;
+                   rd_ready <= i_id_rd_ready;
+                   rd_reg <= i_id_rd_reg;
                    end
         `OP_STORE: begin
                    mem_ram_rd_en <= 1'b0;
@@ -166,13 +166,14 @@ always @ (posedge i_clk or posedge i_rst) begin
                    mem_ram_data <= (i_id_op1 & ram_full_mask) << op2_full_shift;
                    mem_ram_mask <= i_id_ram_mask << op2_shift;
                    mem_sign <= i_id_sign;
-                   rd_ready <= 1'b0;
+                   rd_ready <= i_id_rd_ready;
+                   rd_reg <= i_id_rd_reg;
                    end
         default  : begin
-                   rd_reg <= {XLEN{1'b0}};
                    mem_ram_rd_en <= 1'b0;
                    mem_ram_wr_en <= 1'b0;
-                   rd_ready <= 1'b0;
+                   rd_ready <= i_id_rd_ready;
+                   rd_reg <= i_id_rd_reg;
                    end
         endcase
 
