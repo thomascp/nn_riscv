@@ -44,7 +44,9 @@ input wire [XLEN-1:0]i_exec_rd_reg,
 input wire i_mem_rd_en,
 input wire i_mem_rd_ready,
 input wire [4:0] i_mem_rd,
-input wire [XLEN-1:0]i_mem_rd_reg
+input wire [XLEN-1:0]i_mem_rd_reg,
+
+input wire i_mem_ram_stall
 );
 
 /* define */
@@ -271,6 +273,8 @@ always @ (posedge i_clk or posedge i_rst) begin
         ram_mask <= 0;
         sign <= 0;
         op_32bit <= 0;
+    end else if (i_mem_ram_stall) begin
+        /* keep all as it is */
     end else begin
         rd <= rd_idx;
         pc <= i_if_pc;

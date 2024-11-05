@@ -37,7 +37,9 @@ output wire o_mem_ram_rd_en,
 output wire [XLEN-1:0] o_mem_ram_addr,
 output wire [XLEN-1:0] o_mem_ram_data,
 output wire [MASK_WIDTH-1:0] o_mem_ram_mask,
-output wire o_mem_sign
+output wire o_mem_sign,
+
+input wire i_mem_ram_stall
 );
 
 /* define */
@@ -105,6 +107,8 @@ always @ (posedge i_clk or posedge i_rst) begin
         mem_sign <= 0;
         mem_ram_data <= 0;
         op_32bit <= 1'b0;
+    end else if (i_mem_ram_stall) begin
+        /* keep all as it is */
     end else begin
         rd <= i_id_rd;
         rd_en <= i_id_rd_en;

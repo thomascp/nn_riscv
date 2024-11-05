@@ -14,13 +14,16 @@ input wire i_rst,
 output wire [XLEN-1:0] o_ram_rd_addr,
 output reg o_ram_rd_en,
 output reg [MASK_WIDTH-1:0] o_ram_rd_mask,
+input wire i_ram_rd_ready,
 input wire [DATA_WIDTH-1:0] i_ram_rd_data,
 
 output wire [INSTR_WIDTH-1:0] o_id_instr,
 output wire [XLEN-1:0] o_id_cur_pc,
 input wire i_id_jmp_stall,
 input wire [XLEN-1:0] i_id_jmp_pc,
-input wire i_id_hazard_stall
+input wire i_id_hazard_stall,
+
+input wire i_mem_ram_stall
 );
 
 /* define */
@@ -59,9 +62,11 @@ always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
         instr <= {XLEN{1'b0}};
         cur_pc <= {XLEN{1'b0}};
-    end else if (i_id_jmp_stall) begin
+    end else if (i_id_jmp_stall || !i_ram_rd_ready) begin
         instr <= `OP_INSTR_NOP;
         cur_pc <= cur_pc;
+    end else if (i_mem_ram_stall) begin
+        /* keep all as it is */
     end else if (i_id_hazard_stall) begin
         instr <= (cur_pc[2:0] == 3'b000) ?
             i_ram_rd_data[31 : 0] :

@@ -28,17 +28,21 @@ input wire i_exec_sign,
 
 output wire [XLEN-1:0] o_ram_rd_addr,
 output wire o_ram_rd_en,
+input wire i_ram_rd_ready,
 output wire [MASK_WIDTH-1:0] o_ram_rd_mask,
 input wire [XLEN-1:0] i_ram_rd_data,
 
 output wire [XLEN-1:0] o_ram_wr_addr,
 output wire o_ram_wr_en,
+input wire i_ram_wr_ready,
 output wire [MASK_WIDTH-1:0] o_ram_wr_mask,
 output wire [XLEN-1:0] o_ram_wr_data,
 
 output wire o_wb_rd_en,
 output wire [4:0] o_wb_rd,
-output wire [XLEN-1:0] o_wb_rd_reg
+output wire [XLEN-1:0] o_wb_rd_reg,
+
+output wire o_ram_stall
 );
 
 /* define */
@@ -49,8 +53,7 @@ reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
 reg rd_ready = 1'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
-
-reg ram_rd_en = 1'b0;
+reg ram_stall = 1'b0;
 
 assign o_wb_rd_en = rd_en;
 assign o_wb_rd = rd;
@@ -70,17 +73,25 @@ assign o_id_rd_ready = rd_ready;
 assign o_id_rd = rd;
 assign o_id_rd_reg = rd_reg;
 
+assign o_ram_stall = ram_stall;
+
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
         rd_en <= 1'b0;
         rd <= 5'b0;
         rd_reg <= 0;
         rd_ready <= 1'b0;
-        ram_rd_en <= 1'b0;
+        ram_stall <= 1'b0;
+    end else if (!i_ram_rd_ready || !i_ram_wr_ready) begin
+        rd_en <= 1'b0;
+        rd <= 5'b0;
+        rd_reg <= 0;
+        rd_ready <= 1'b0;
+        ram_stall <= 1'b1;
     end else begin
         rd_en <= i_exec_rd_en;
         rd <= i_exec_rd;
-        ram_rd_en <= i_exec_ram_rd_en;
+        ram_stall <= 1'b0;
         if (i_exec_ram_rd_en) begin
             case(i_exec_ram_mask)
                 8'b00000001:

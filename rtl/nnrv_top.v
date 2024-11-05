@@ -17,14 +17,17 @@ output wire o_led
 
 wire [XLEN-1:0] ram_rd1_addr;
 wire ram_rd1_en;
+wire ram_rd1_ready;
 wire [MASK_WIDTH-1:0] ram_rd1_mask;
 wire [XLEN-1:0] ram_rd1_data;
 wire [XLEN-1:0] ram_rd2_addr;
 wire ram_rd2_en;
+wire ram_rd2_ready;
 wire [MASK_WIDTH-1:0] ram_rd2_mask;
 wire [XLEN-1:0] ram_rd2_data;
 wire [XLEN-1:0] ram_wr_addr;
 wire ram_wr_en;
+wire ram_wr_ready;
 wire [MASK_WIDTH-1:0] ram_wr_mask;
 wire [XLEN-1:0] ram_wr_data;
 
@@ -75,6 +78,7 @@ wire mem_id_rd_en;
 wire mem_id_rd_ready;
 wire [4:0] mem_id_rd;
 wire [XLEN-1:0] mem_id_rd_reg;
+wire mem_ram_stall;
 
 wire wb_reg_rd_en;
 wire [4:0] wb_reg_rd;
@@ -86,14 +90,17 @@ ram ram (
     .i_clk(i_clk),
     .i_rd1_addr(ram_rd1_addr[ADDR_WIDTH-1:0]),
     .i_rd1_en(ram_rd1_en),
+    .o_rd1_ready(ram_rd1_ready),
     .i_rd1_mask(ram_rd1_mask),
     .o_rd1_data(ram_rd1_data),
     .i_rd2_addr(ram_rd2_addr[ADDR_WIDTH-1:0]),
     .i_rd2_en(ram_rd2_en),
+    .o_rd2_ready(ram_rd2_ready),
     .i_rd2_mask(ram_rd2_mask),
     .o_rd2_data(ram_rd2_data),
     .i_wr_addr(ram_wr_addr[ADDR_WIDTH-1:0]),
     .i_wr_en(ram_wr_en),
+    .o_wr_ready(ram_wr_ready),
     .i_wr_mask(ram_wr_mask),
     .i_wr_data(ram_wr_data)
 );
@@ -104,12 +111,14 @@ nnrv_if nnrv_if (
     .o_ram_rd_addr(ram_rd1_addr),
     .o_ram_rd_en(ram_rd1_en),
     .o_ram_rd_mask(ram_rd1_mask),
+    .i_ram_rd_ready(ram_rd1_ready),
     .i_ram_rd_data(ram_rd1_data),
     .o_id_instr(if_instr),
     .o_id_cur_pc(if_cur_pc),
     .i_id_jmp_stall(id_jmp_stall),
     .i_id_jmp_pc(id_jmp_pc),
-    .i_id_hazard_stall(exec_id_hazard_stall)
+    .i_id_hazard_stall(exec_id_hazard_stall),
+    .i_mem_ram_stall(mem_ram_stall)
 );
 
 nnrv_reg nnrv_reg (
@@ -158,7 +167,8 @@ nnrv_id nnrv_id (
     .i_mem_rd_en(mem_id_rd_en),
     .i_mem_rd_ready(mem_id_rd_ready),
     .i_mem_rd(mem_id_rd),
-    .i_mem_rd_reg(mem_id_rd_reg)
+    .i_mem_rd_reg(mem_id_rd_reg),
+    .i_mem_ram_stall(mem_ram_stall)
 );
 
 nnrv_exec nnrv_exec (
@@ -188,7 +198,8 @@ nnrv_exec nnrv_exec (
     .o_mem_ram_addr(exec_mem_ram_addr),
     .o_mem_ram_data(exec_mem_ram_data),
     .o_mem_ram_mask(exec_mem_ram_mask),
-    .o_mem_sign(exec_mem_sign)
+    .o_mem_sign(exec_mem_sign),
+    .i_mem_ram_stall(mem_ram_stall)
 );
 
 nnrv_mem nnrv_mem (
@@ -210,10 +221,12 @@ nnrv_mem nnrv_mem (
     .i_exec_sign(exec_mem_sign),
     .o_ram_rd_addr(ram_rd2_addr),
     .o_ram_rd_en(ram_rd2_en),
+    .i_ram_rd_ready(ram_rd2_ready),
     .o_ram_rd_mask(ram_rd2_mask),
     .i_ram_rd_data(ram_rd2_data),
     .o_ram_wr_addr(ram_wr_addr),
     .o_ram_wr_en(ram_wr_en),
+    .i_ram_wr_ready(ram_wr_ready),
     .o_ram_wr_mask(ram_wr_mask),
     .o_ram_wr_data(ram_wr_data),
     .o_wb_rd_en(mem_wb_rd_en),
