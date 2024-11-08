@@ -128,6 +128,8 @@ wire rs1_valid;
 wire rs2_valid;
 
 wire id_hazard_stall;
+wire id_rd_rs1_ready;
+wire id_rd_rs2_ready;
 wire exec_hazard_stall;
 wire exec_rd_rs1_ready;
 wire exec_rd_rs2_ready;
@@ -213,6 +215,8 @@ assign o_exec_op_32bit = op_32bit;
 
 assign id_hazard_stall = (rd_en) && (!rd_ready) && (rd != 0) &&
                 (((rs1_valid) && (rd == rs1_idx)) || ((rs2_valid) && (rd == rs2_idx)));
+assign id_rd_rs1_ready = (rd_en) && (rd_ready) && (rd != 0) && (rs1_valid) && (rd == rs1_idx);
+assign id_rd_rs2_ready = (rd_en) && (rd_ready) && (rd != 0) && (rs2_valid) && (rd == rs2_idx);
 
 assign exec_hazard_stall = (i_exec_rd_en) && (!i_exec_rd_ready) && (i_exec_rd != 0) &&
                 (((rs1_valid) && (i_exec_rd == rs1_idx)) || ((rs2_valid) && (i_exec_rd == rs2_idx)));
@@ -227,8 +231,8 @@ assign mem_rd_rs2_ready = (i_mem_rd_en) && (i_mem_rd_ready) && (i_mem_rd != 0) &
 assign hazard_stall = id_hazard_stall || exec_hazard_stall || mem_hazard_stall;
 assign o_if_hazard_stall = hazard_stall;
 
-assign r1_reg = (exec_rd_rs1_ready) ? i_exec_rd_reg : (mem_rd_rs1_ready) ? i_mem_rd_reg : i_reg_r1_reg;
-assign r2_reg = (exec_rd_rs2_ready) ? i_exec_rd_reg : (mem_rd_rs2_ready) ? i_mem_rd_reg : i_reg_r2_reg;
+assign r1_reg = (id_rd_rs1_ready)? rd_reg : (exec_rd_rs1_ready) ? i_exec_rd_reg : (mem_rd_rs1_ready) ? i_mem_rd_reg : i_reg_r1_reg;
+assign r2_reg = (id_rd_rs2_ready) ? rd_reg : (exec_rd_rs2_ready) ? i_exec_rd_reg : (mem_rd_rs2_ready) ? i_mem_rd_reg : i_reg_r2_reg;
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
@@ -260,6 +264,7 @@ always @ (posedge i_clk or posedge i_rst) begin
         sign <= 0;
         op_32bit <= 0;
     end else if (jmp_stall) begin
+        /* NOP */
         rd <= 5'b0;
         op1 <= {XLEN{1'b0}};
         op2 <= {XLEN{1'b0}};
