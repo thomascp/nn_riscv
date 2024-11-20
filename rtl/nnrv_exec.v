@@ -20,7 +20,6 @@ input wire [4:0] i_id_rd,
 input wire i_id_rd_en,
 input wire i_id_rd_ready,
 input wire [XLEN-1:0] i_id_rd_reg,
-input wire [XLEN-1:0] i_id_pc,
 
 output wire o_id_rd_en,
 output wire o_id_rd_ready,
@@ -96,17 +95,11 @@ assign ram_full_mask = {{8{i_id_ram_mask[7]}}, {8{i_id_ram_mask[6]}}, {8{i_id_ra
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
-        rd_reg <= {XLEN{1'b0}};
         rd_en <= 1'b0;
         rd <= 5'b0;
         rd_ready <= 1'b0;
         mem_ram_rd_en <= 1'b0;
         mem_ram_wr_en <= 1'b0;
-        mem_ram_addr <= 0;
-        mem_ram_mask <= 0;
-        mem_sign <= 0;
-        mem_ram_data <= 0;
-        op_32bit <= 1'b0;
     end else if (i_mem_ram_stall) begin
         /* keep all as it is */
     end else begin

@@ -54,6 +54,7 @@ reg [4:0] rd = 5'b0;
 reg rd_ready = 1'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
 reg ram_stall = 1'b0;
+wire ram_not_ready;
 
 assign o_wb_rd_en = rd_en;
 assign o_wb_rd = rd;
@@ -73,19 +74,17 @@ assign o_id_rd_ready = rd_ready;
 assign o_id_rd = rd;
 assign o_id_rd_reg = rd_reg;
 
+assign ram_not_ready = ((i_exec_ram_rd_en && !i_ram_rd_ready) ||
+                        (i_exec_ram_wr_en && !i_ram_wr_ready));
 assign o_ram_stall = ram_stall;
 
 always @ (posedge i_clk or posedge i_rst) begin
     if (i_rst) begin
         rd_en <= 1'b0;
-        rd <= 5'b0;
-        rd_reg <= 0;
         rd_ready <= 1'b0;
         ram_stall <= 1'b0;
-    end else if (!i_ram_rd_ready || !i_ram_wr_ready) begin
+    end else if (ram_not_ready) begin
         rd_en <= 1'b0;
-        rd <= 5'b0;
-        rd_reg <= 0;
         rd_ready <= 1'b0;
         ram_stall <= 1'b1;
     end else begin

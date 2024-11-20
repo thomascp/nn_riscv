@@ -16,7 +16,6 @@ output wire o_if_jmp_stall,
 output wire [XLEN-1:0] o_if_jmp_pc,
 output wire o_if_hazard_stall,
 
-output wire [XLEN-1:0] o_exec_pc,
 output wire [XLEN-1:0] o_exec_op1,
 output wire [XLEN-1:0] o_exec_op2,
 output wire [3:0] o_exec_type,
@@ -145,7 +144,6 @@ reg rd_en = 1'b0;
 reg [4:0] rd = 5'b0;
 reg rd_ready = 1'b0;
 reg [XLEN-1:0] rd_reg = {XLEN{1'b0}};
-reg [XLEN-1:0] pc = {XLEN{1'b0}};
 reg [MASK_WIDTH-1:0] ram_mask = 8'b00000000;
 reg sign = 1'b0;
 
@@ -206,7 +204,6 @@ assign o_exec_rd_en = rd_en;
 assign o_exec_rd = rd;
 assign o_exec_rd_ready = rd_ready;
 assign o_exec_rd_reg = rd_reg;
-assign o_exec_pc = pc;
 assign o_exec_ram_mask = ram_mask;
 
 assign o_exec_sign = sign;
@@ -235,54 +232,16 @@ assign r1_reg = (id_rd_rs1_ready)? rd_reg : (exec_rd_rs1_ready) ? i_exec_rd_reg 
 assign r2_reg = (id_rd_rs2_ready) ? rd_reg : (exec_rd_rs2_ready) ? i_exec_rd_reg : (mem_rd_rs2_ready) ? i_mem_rd_reg : i_reg_r2_reg;
 
 always @ (posedge i_clk or posedge i_rst) begin
-    if (i_rst) begin
-        rd <= 5'b0;
-        op1 <= {XLEN{1'b0}};
-        op2 <= {XLEN{1'b0}};
+    if (i_rst || jmp_stall || hazard_stall) begin
+        /* move NOP to the post pipeline */
+        rd_en <= 1'b0;
         type <= `OP_NOP;
         jmp_stall <= 1'b0;
-        rd_en <= 1'b0;
         rd_ready <= 1'b0;
-        rd_reg <= {XLEN{1'b0}};
-        pc <= 0;
-        jmp_pc <= 0;
-        ram_mask <= 0;
-        sign <= 0;
-        op_32bit <= 0;
-    end else if (hazard_stall) begin
-        rd <= 5'b0;
-        op1 <= {XLEN{1'b0}};
-        op2 <= {XLEN{1'b0}};
-        type <= `OP_NOP;
-        jmp_stall <= 1'b0;
-        rd_en <= 1'b0;
-        rd_ready <= 1'b0;
-        rd_reg <= {XLEN{1'b0}};
-        pc <= 0;
-        jmp_pc <= 0;
-        ram_mask <= 0;
-        sign <= 0;
-        op_32bit <= 0;
-    end else if (jmp_stall) begin
-        /* NOP */
-        rd <= 5'b0;
-        op1 <= {XLEN{1'b0}};
-        op2 <= {XLEN{1'b0}};
-        type <= `OP_NOP;
-        jmp_stall <= 1'b0;
-        rd_en <= 1'b0;
-        rd_ready <= 1'b0;
-        rd_reg <= {XLEN{1'b0}};
-        pc <= 0;
-        jmp_pc <= 0;
-        ram_mask <= 0;
-        sign <= 0;
-        op_32bit <= 0;
     end else if (i_mem_ram_stall) begin
         /* keep all as it is */
     end else begin
         rd <= rd_idx;
-        pc <= i_if_pc;
         case(opcode)
         `OP_IMM :   begin
                     jmp_stall <= 1'b0;

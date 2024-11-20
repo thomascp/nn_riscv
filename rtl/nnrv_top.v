@@ -53,7 +53,6 @@ wire [XLEN-1:0] id_exec_rd_reg;
 wire [MASK_WIDTH-1:0] id_exec_ram_mask;
 wire id_exec_sign;
 wire id_exec_op_32bit;
-wire [XLEN-1:0] i_id_pc;
 
 wire exec_mem_rd_en;
 wire [4:0] exec_mem_rd;
@@ -143,7 +142,6 @@ nnrv_id nnrv_id (
     .o_if_jmp_stall(id_jmp_stall),
     .o_if_jmp_pc(id_jmp_pc),
     .o_if_hazard_stall(exec_id_hazard_stall),
-    .o_exec_pc(i_id_pc),
     .o_exec_op1(id_exec_op1),
     .o_exec_op2(id_exec_op2),
     .o_exec_type(id_exec_type),
@@ -184,7 +182,6 @@ nnrv_exec nnrv_exec (
     .i_id_rd_en(id_exec_rd_en),
     .i_id_rd_ready(id_exec_rd_ready),
     .i_id_rd_reg(id_exec_rd_reg),
-    .i_id_pc(i_id_pc),
     .o_id_rd_en(exec_id_rd_en),
     .o_id_rd_ready(exec_id_rd_ready),
     .o_id_rd(exec_id_rd),
