@@ -40,9 +40,29 @@ wire [DATA_WIDTH-1:0] rd2_mask;
 wire [ADDR_WIDTH-1:0] wr_addr;
 wire [DATA_WIDTH-1:0] wr_mask;
 
+`define TEST_DELAY
+
+`ifdef TEST_DELAY
+
+reg rd1_ready = 1'b0;
+reg rd2_ready = 1'b0;
+reg wr_ready = 1'b0;
+
+reg rd1_working = 0;
+reg rd2_working = 0;
+reg wr_working = 0;
+
+reg [1:0] rd1_cntdown = 0;
+reg [1:0] rd2_cntdown = 0;
+reg [1:0] wr_cntdown = 0;
+
+`else
+
 reg rd1_ready = 1'b1;
 reg rd2_ready = 1'b1;
 reg wr_ready = 1'b1;
+
+`endif
 
 assign rd1_addr = {3'h0, i_rd1_addr[ADDR_WIDTH-1:3]};
 assign o_rd1_data = (i_rd1_en) ? (ram[rd1_addr] & rd1_mask) : 8'b0;
@@ -69,6 +89,52 @@ always @ (posedge i_clk) begin
     ram[wr_addr] <= ((ram[wr_addr] & ~wr_mask) | (i_wr_data & wr_mask));
   end
 end
+
+`ifdef TEST_DELAY
+
+always @ (posedge i_clk) begin
+  if (i_rd1_en && rd1_working == 0) begin
+    rd1_working <= 1;
+    rd1_cntdown <= 3;
+    rd1_ready <= 0;
+  end else begin
+    rd1_cntdown -= 1;
+    if (rd1_cntdown == 0) begin
+      rd1_working <= 0;
+      rd1_ready <= 1;
+    end
+  end
+end
+
+always @ (posedge i_clk) begin
+  if (i_rd2_en && rd2_working == 0) begin
+    rd2_working <= 1;
+    rd2_cntdown <= 3;
+    rd2_ready <= 0;
+  end else begin
+    rd2_cntdown -= 1;
+    if (rd2_cntdown == 0) begin
+      rd2_working <= 0;
+      rd2_ready <= 1;
+    end
+  end
+end
+
+always @ (posedge i_clk) begin
+  if (i_wr_en && wr_working == 0) begin
+    wr_working <= 1;
+    wr_cntdown <= 3;
+    wr_ready <= 0;
+  end else begin
+    wr_cntdown -= 1;
+    if (wr_cntdown == 0) begin
+      wr_working <= 0;
+      wr_ready <= 1;
+    end
+  end
+end
+
+`endif
 
 initial begin
   $readmemh("ram.mem", ram);

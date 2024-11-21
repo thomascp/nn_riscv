@@ -108,42 +108,62 @@ always @ (posedge i_clk or posedge i_rst) begin
         op_32bit <= i_id_op_32bit;
         case(i_id_exec_type)
         `OP_SUB  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= i_id_op1 - i_id_op2;
                    rd_ready <= 1'b1;
                    end
         `OP_ADD  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= (i_id_op1 + i_id_op2);
                    rd_ready <= 1'b1;
                    end
         `OP_SLT  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= ($signed(i_id_op1) < $signed(i_id_op2));
                    rd_ready <= 1'b1;
                    end
         `OP_SLTU : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= (i_id_op1 < i_id_op2);
                    rd_ready <= 1'b1;
                    end
         `OP_XOR  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= i_id_op1 ^ i_id_op2;
                    rd_ready <= 1'b1;
                    end
         `OP_OR   : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= i_id_op1 | i_id_op2;
                    rd_ready <= 1'b1;
                    end
         `OP_AND  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= i_id_op1 & i_id_op2;
                    rd_ready <= 1'b1;
                    end
         `OP_SLL  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= i_id_op1 << i_id_op2;
                    rd_ready <= 1'b1;
                    end
         `OP_SRL  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= i_id_op1 >> i_id_op2;
                    rd_ready <= 1'b1;
                    end
         `OP_SRA  : begin
+                   mem_ram_rd_en <= 1'b0;
+                   mem_ram_wr_en <= 1'b0;
                    rd_reg <= $signed(i_id_op1) >>> i_id_op2;
                    rd_ready <= 1'b1;
                    end
