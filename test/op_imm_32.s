@@ -10,11 +10,5 @@ _boot:                    /* x0  = 0    0x000 */
     srliw x8, x5, 24
     sraiw x9, x3, 24
     sraiw x10, x5, 24
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
 loop:
     jal x0, loop

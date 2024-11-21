@@ -11,11 +11,6 @@ _boot:                    /* x0  = 0    0x000 */
     sw x3, 0(x30)
     lw x4, 0(x31)
     addi x5, x4, 1
-    nop
-    nop
-    nop
-    nop
-    nop
 loop:
     jal x0, loop
 

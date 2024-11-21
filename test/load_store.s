@@ -4,11 +4,6 @@
 _boot:                    /* x0  = 0    0x000 */
     la x31, read_v
     la x30, write_v
-    nop
-    nop
-    nop
-    nop
-    nop
     lbu x1, 0(x31)
     lbu x2, 1(x31)
     lbu x3, 2(x31)
@@ -26,25 +21,14 @@ _boot:                    /* x0  = 0    0x000 */
     lw x15, 8(x31)
     lwu x16, 8(x31)
     ld x17, 16(x31)
-    nop
-    nop
-    nop
-    nop
-    nop
     sb x2, 0(x30)
     sh x9, 4(x30)
     sw x15, 8(x30)
     sd x17, 16(x30)
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
 loop:
     jal x0, loop
+
+.balign 8
 
 read_v:
     .word 0x1234abcd
