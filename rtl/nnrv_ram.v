@@ -40,26 +40,44 @@ wire [DATA_WIDTH-1:0] rd2_mask;
 wire [ADDR_WIDTH-1:0] wr_addr;
 wire [DATA_WIDTH-1:0] wr_mask;
 
-`define TEST_DELAY
+/*
+`define TEST_RD1_DELAY
+`define TEST_RD2_DELAY
+`define TEST_WR_DELAY
+*/
 
-`ifdef TEST_DELAY
+`ifdef TEST_RD1_DELAY
 
 reg rd1_ready = 1'b0;
-reg rd2_ready = 1'b0;
-reg wr_ready = 1'b0;
-
 reg rd1_working = 0;
-reg rd2_working = 0;
-reg wr_working = 0;
-
 reg [1:0] rd1_cntdown = 0;
-reg [1:0] rd2_cntdown = 0;
-reg [1:0] wr_cntdown = 0;
 
 `else
 
 reg rd1_ready = 1'b1;
+
+`endif
+
+`ifdef TEST_RD2_DELAY
+
+reg rd2_ready = 1'b0;
+reg rd2_working = 0;
+reg [1:0] rd2_cntdown = 0;
+
+`else
+
 reg rd2_ready = 1'b1;
+
+`endif
+
+`ifdef TEST_WR_DELAY
+
+reg wr_ready = 1'b0;
+reg wr_working = 0;
+reg [1:0] wr_cntdown = 0;
+
+`else
+
 reg wr_ready = 1'b1;
 
 `endif
@@ -90,47 +108,70 @@ always @ (posedge i_clk) begin
   end
 end
 
-`ifdef TEST_DELAY
+`ifdef TEST_RD1_DELAY
 
-always @ (posedge i_clk) begin
-  if (i_rd1_en && rd1_working == 0) begin
-    rd1_working <= 1;
-    rd1_cntdown <= 3;
+always @ (posedge i_clk or i_rd1_en) begin
+  if (i_rd1_en) begin
+    if (rd1_working == 0) begin
+      rd1_working <= 1;
+      rd1_cntdown <= 3;
+      rd1_ready <= 0;
+    end else begin
+      rd1_cntdown -= 1;
+      if (rd1_cntdown == 0) begin
+        rd1_working <= 0;
+        rd1_ready <= 1;
+      end
+    end
+  end else begin
+    rd1_working <= 0;
     rd1_ready <= 0;
-  end else begin
-    rd1_cntdown -= 1;
-    if (rd1_cntdown == 0) begin
-      rd1_working <= 0;
-      rd1_ready <= 1;
-    end
   end
 end
 
-always @ (posedge i_clk) begin
-  if (i_rd2_en && rd2_working == 0) begin
-    rd2_working <= 1;
-    rd2_cntdown <= 3;
+`endif
+
+`ifdef TEST_RD2_DELAY
+
+always @ (posedge i_clk or i_rd2_en) begin
+  if (i_rd2_en) begin
+    if (rd2_working == 0) begin
+      rd2_working <= 1;
+      rd2_cntdown <= 3;
+      rd2_ready <= 0;
+    end else begin
+      rd2_cntdown -= 1;
+      if (rd2_cntdown == 0) begin
+        rd2_working <= 0;
+        rd2_ready <= 1;
+      end
+    end
+  end else begin
+    rd2_working <= 0;
     rd2_ready <= 0;
-  end else begin
-    rd2_cntdown -= 1;
-    if (rd2_cntdown == 0) begin
-      rd2_working <= 0;
-      rd2_ready <= 1;
-    end
   end
 end
 
-always @ (posedge i_clk) begin
-  if (i_wr_en && wr_working == 0) begin
-    wr_working <= 1;
-    wr_cntdown <= 3;
-    wr_ready <= 0;
-  end else begin
-    wr_cntdown -= 1;
-    if (wr_cntdown == 0) begin
-      wr_working <= 0;
-      wr_ready <= 1;
+`endif
+
+`ifdef TEST_WR_DELAY
+
+always @ (posedge i_clk or i_wr_en) begin
+  if (i_wr_en) begin
+    if (wr_working == 0) begin
+      wr_working <= 1;
+      wr_cntdown <= 3;
+      wr_ready <= 0;
+    end else begin
+      wr_cntdown -= 1;
+      if (wr_cntdown == 0) begin
+        wr_working <= 0;
+        wr_ready <= 1;
+      end
     end
+  end else begin
+    wr_working <= 0;
+    wr_ready <= 0;
   end
 end
 

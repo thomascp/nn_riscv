@@ -232,14 +232,15 @@ assign r1_reg = (id_rd_rs1_ready)? rd_reg : (exec_rd_rs1_ready) ? i_exec_rd_reg 
 assign r2_reg = (id_rd_rs2_ready) ? rd_reg : (exec_rd_rs2_ready) ? i_exec_rd_reg : (mem_rd_rs2_ready) ? i_mem_rd_reg : i_reg_r2_reg;
 
 always @ (posedge i_clk or posedge i_rst) begin
-    if (i_rst || jmp_stall || hazard_stall) begin
+    if (i_mem_ram_stall) begin
+        /* keep all as it is */
+        /* handle this first, as if there is hazard_stall, current op will be set to NOP */
+    end else if (i_rst || jmp_stall || hazard_stall) begin
         /* move NOP to the post pipeline */
         rd_en <= 1'b0;
         type <= `OP_NOP;
         jmp_stall <= 1'b0;
         rd_ready <= 1'b0;
-    end else if (i_mem_ram_stall) begin
-        /* keep all as it is */
     end else begin
         rd <= rd_idx;
         case(opcode)

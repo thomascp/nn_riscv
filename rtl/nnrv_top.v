@@ -228,7 +228,8 @@ nnrv_mem nnrv_mem (
     .o_ram_wr_data(ram_wr_data),
     .o_wb_rd_en(mem_wb_rd_en),
     .o_wb_rd(mem_wb_rd),
-    .o_wb_rd_reg(mem_wb_rd_reg)
+    .o_wb_rd_reg(mem_wb_rd_reg),
+    .o_ram_stall(mem_ram_stall)
 );
 
 nnrv_wb nnrv_wb (
