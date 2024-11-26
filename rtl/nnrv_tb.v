@@ -16,10 +16,10 @@ initial begin
   $dumpvars(0,nnrv_tb);
   for (reg_idx = 0; reg_idx < 32; reg_idx = reg_idx + 1)
     $dumpvars(0, nnrv_tb.nnrv_top.nnrv_reg.regs[reg_idx]);
-  for (reg_idx = 0; reg_idx < 100; reg_idx = reg_idx + 1)
+  for (reg_idx = 0; reg_idx < 4096; reg_idx = reg_idx + 1)
     $dumpvars(0, nnrv_tb.nnrv_top.ram.ram[reg_idx]);
 
-  #3000;
+  #30000;
 
   file = $fopen ("result.log", "w");
   $fwrite(file, "regs :\n");
@@ -39,7 +39,7 @@ initial begin
 end
 
 always begin
- #5 clk = !clk;
+ #1 clk = !clk;
 end
 
 /*
