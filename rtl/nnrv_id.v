@@ -190,7 +190,7 @@ assign rs2_valid = (opcode == `BRANCH) || (opcode == `STORE) || (opcode == `OP) 
                    (opcode == `OP_32);
 
 assign o_if_jmp_stall = jmp_stall;
-assign o_if_jmp_pc = jmp_pc;
+assign o_if_jmp_pc = {jmp_pc[XLEN-1:2], 2'b0};
 
 assign o_reg_r1_en = reg_r1_en;
 assign o_reg_r2_en = reg_r2_en;
@@ -451,7 +451,7 @@ always @ (posedge i_clk or posedge i_rst) begin
                     end
         `JALR     : begin
                     jmp_stall <= 1'b1;
-                    jmp_pc <= j_imm + r1_reg;
+                    jmp_pc <= i_imm + r1_reg;
                     type <= `OP_JMP;
                     rd_en <= 1'b1;
                     rd_ready <= 1'b1;

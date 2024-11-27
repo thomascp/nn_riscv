@@ -12,3 +12,8 @@
 *.srcs
 
 nnrv
+
+__pycache__
+riscof_work
+riscv-arch-test
+

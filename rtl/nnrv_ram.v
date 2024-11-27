@@ -3,7 +3,7 @@
 module ram
 # (
 parameter DATA_WIDTH = 64,
-parameter ADDR_WIDTH = 15,
+parameter ADDR_WIDTH = 21,
 parameter MASK_WIDTH = DATA_WIDTH >> 3,
 parameter RAM_DEPTH = (1 << ADDR_WIDTH) / MASK_WIDTH
 )
