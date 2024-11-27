@@ -16,4 +16,4 @@ nnrv
 __pycache__
 riscof_work
 riscv-arch-test
-
+DUT-nn_riscv.signature
